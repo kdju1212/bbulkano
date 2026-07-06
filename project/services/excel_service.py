@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from copy import copy
 from datetime import datetime
 from pathlib import Path
@@ -11,7 +12,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from services.formula_eval import effective_value
-from utils.range_utils import RangeSpec, col_index, parse_range, split_sheet_ref
+from utils.range_utils import RangeSpec, col_index, parse_range
 
 
 class ExcelService:
@@ -56,7 +57,7 @@ class ExcelService:
             for col_offset, value in enumerate(row_values):
                 col_num = start_col + col_offset
                 cell = ws.cell(row=row_num, column=col_num)
-                cell.value = normalize_value(value)
+                cell.value = coerce_value(value)
                 if style_row:
                     self.copy_cell_style(ws.cell(row=style_row, column=col_num), cell)
         return start_row + len(values) - 1
@@ -76,13 +77,31 @@ class ExcelService:
                 return row
         return start_row - 1
 
+    def last_content_row(self, sheet_name: str) -> int:
+        """VBA의 Cells.Find("*", SearchDirection:=xlPrevious)와 동일: 시트 전체에서
+        내용(값 또는 수식)이 있는 마지막 행을 반환한다."""
+        ws = self.workbook[sheet_name]
+        last = 0
+        for (row, _col), cell in ws._cells.items():
+            if row > last and cell.value not in (None, ""):
+                last = row
+        return last
+
+    def last_raw_row_in_cols(self, sheet_name: str, cols: set[int]) -> int:
+        """VBA의 열별 Cells(Rows.Count, col).End(xlUp).Row 최대값과 동일: 지정한 열들에서
+        내용이 있는 마지막 행(수식 포함, 평가 없이 원시 값 기준)을 반환한다."""
+        ws = self.workbook[sheet_name]
+        last = 0
+        for (row, c), cell in ws._cells.items():
+            if c in cols and row > last and cell.value not in (None, ""):
+                last = row
+        return last
+
     def filldown(self, rule: dict[str, Any]) -> None:
         ws = self.workbook[rule["target_sheet"]]
-        _, ref = split_sheet_ref(rule["ref_column"])
-        ref_col = col_index(ref.rstrip("0123456789"))
         top = parse_range(rule["range_top"])
         source_row = top.min_row or 1
-        last_row = self.last_data_row(ws.title, ref_col, source_row)
+        last_row = self.last_content_row(ws.title)
         if last_row <= source_row:
             return
         for target_row in range(source_row + 1, last_row + 1):
@@ -112,9 +131,9 @@ class ExcelService:
         source_specs = [parse_range(src) for src, _ in mappings]
         dest_specs = [parse_range(dst) for _, dst in mappings]
         first_source_row = source_specs[0].min_row or 1
-        last_source_row = self._last_row_from_specs(src_ws, source_specs, first_source_row)
-        if last_source_row < first_source_row:
-            return start_row or self.append_row_for(target_sheet, dest_specs[0].min_col)
+        # VBA 내부통합과 동일: 소스 시트 전체의 마지막 내용 행 기준, 최소 1행 보장
+        # (소스가 비어 있어도 빈 1행 + 마킹을 기록한다)
+        last_source_row = max(self.last_content_row(source_sheet), first_source_row)
         dest_row = start_row or self._dest_start_row(dst_ws, dest_specs[0])
         row_count = last_source_row - first_source_row + 1
         for offset in range(row_count):
@@ -130,30 +149,34 @@ class ExcelService:
                         dst_cell.value = f"='{source_sheet}'!{src_cell.coordinate}"
                     else:
                         dst_cell.value = src_cell.value
-                    self.copy_cell_style(dst_ws.cell(row=max(dest_spec.min_row or 6, 1), column=dst_col), dst_cell)
             for col, value in markings or []:
-                dst_ws.cell(row=dest_row + offset, column=col_index(col)).value = value
+                dst_ws.cell(row=dest_row + offset, column=col_index(col)).value = coerce_value(value)
         return dest_row + row_count - 1
 
     def apply_rules(self, rule_group: dict[str, Any]) -> None:
+        # VBA ProcessConditionalRules와 동일: 규칙 단위 외부 루프,
+        # 행은 2행부터 시트 전체의 마지막 내용 행까지 검사한다.
         ws = self.workbook[rule_group["target_sheet"]]
-        ref_col = col_index(rule_group.get("ref_column", "A").split("!")[-1].rstrip("0123456789"))
-        last_row = self.last_data_row(ws.title, ref_col, 1)
-        for row in range(1, last_row + 1):
-            for rule in rule_group["rules"]:
+        last_row = self.last_content_row(ws.title)
+        for rule in rule_group["rules"]:
+            action = rule["action"]
+            action_col = col_index(action["column"])
+            for row in range(2, last_row + 1):
                 if self._matches(ws, row, rule):
-                    action = rule["action"]
-                    ws.cell(row=row, column=col_index(action["column"])).value = action["value"]
+                    ws.cell(row=row, column=action_col).value = coerce_value(action["value"])
 
     def filter_copy(self, rule: dict[str, Any]) -> int:
+        # VBA ProcessFilterCopy와 동일: 소스 2행부터 시트 마지막 내용 행까지 조건 검사,
+        # 붙여넣기 시작 행은 첫 map 목적지 열들의 End(xlUp) 최대값 + 1.
         src_ws = self.workbook[rule["source_sheet"]]
         dst_ws = self.workbook[rule["target_sheet"]]
         mappings = [(parse_range(src), parse_range(dst)) for src, dst in rule["map"]]
-        start_row = 6
-        last_row = self._last_row_from_specs(src_ws, [m[0] for m in mappings], start_row)
-        dest_row = self.append_row_for(dst_ws.title, mappings[0][1].min_col)
+        last_row = self.last_content_row(src_ws.title)
+        first_dest = mappings[0][1]
+        dest_cols = set(range(first_dest.min_col, first_dest.max_col + 1))
+        dest_row = max(self.last_raw_row_in_cols(dst_ws.title, dest_cols), 1) + 1
         copied = 0
-        for row in range(start_row, last_row + 1):
+        for row in range(2, last_row + 1):
             if not self._row_matches_conditions(src_ws, row, rule["filter_conditions"]):
                 continue
             for source_spec, dest_spec in mappings:
@@ -203,15 +226,6 @@ class ExcelService:
     def _row_matches_conditions(self, ws: Worksheet, row: int, conditions: list[dict[str, Any]]) -> bool:
         return all(_match_one(ws, row, condition) for condition in conditions)
 
-    def _last_row_from_specs(self, ws: Worksheet, specs: list[RangeSpec], start_row: int) -> int:
-        max_row = start_row - 1
-        for spec in specs:
-            for row in range(ws.max_row, start_row - 1, -1):
-                if any(effective_value(ws, row, col) not in (None, "") for col in range(spec.min_col, spec.max_col + 1)):
-                    max_row = max(max_row, row)
-                    break
-        return max_row
-
     def _dest_start_row(self, ws: Worksheet, spec: RangeSpec) -> int:
         if spec.min_row:
             return spec.min_row
@@ -224,14 +238,27 @@ def _match_one(ws: Worksheet, row: int, condition: dict[str, Any]) -> bool:
     if condition.get("case_insensitive"):
         text_cmp = text.lower()
         values = [str(v).lower() for v in condition.get("values", [])]
+        single = str(condition.get("value", "")).lower()
         contains_any = [str(v).lower() for v in condition.get("contains_any", [])]
     else:
         text_cmp = text
         values = [str(v) for v in condition.get("values", [])]
+        single = str(condition.get("value", ""))
         contains_any = [str(v) for v in condition.get("contains_any", [])]
+    if "value" in condition and text_cmp != single:
+        return False
     if "values" in condition and text_cmp not in values:
         return False
     if "contains_any" in condition and not any(item in text_cmp for item in contains_any):
+        return False
+    if "not_value" in condition:
+        expected = str(condition["not_value"])
+        if condition.get("case_insensitive"):
+            expected = expected.lower()
+        if text_cmp == expected:
+            return False
+    # VBA와 동일: 인식 가능한 조건 키가 하나도 없으면 매칭 실패로 처리
+    if not any(key in condition for key in ("value", "values", "contains_any", "not_value")):
         return False
     return True
 
@@ -239,6 +266,26 @@ def _match_one(ws: Worksheet, row: int, condition: dict[str, Any]) -> bool:
 def normalize_value(value: Any) -> Any:
     if value == "":
         return None
+    return value
+
+
+_NUMBER_RE = re.compile(r"^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$")
+
+
+def coerce_value(value: Any) -> Any:
+    """VBA가 CSV를 열거나 .Value에 문자열을 대입할 때 Excel이 수행하는
+    숫자 자동 변환을 재현한다. 숫자 형태의 문자열은 int/float로 변환하고
+    빈 문자열은 None으로 만든다. 날짜·기타 문자열은 그대로 둔다."""
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    if text == "":
+        return None
+    if _NUMBER_RE.match(text):
+        number = float(text.replace(",", ""))
+        if number.is_integer() and "." not in text:
+            return int(number)
+        return number
     return value
 
 

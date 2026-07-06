@@ -3,10 +3,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-import pandas as pd
-
 from utils.encoding import detect_text_format
-from utils.range_utils import RangeSpec
 
 
 class CsvService:
@@ -23,19 +20,11 @@ class CsvService:
                 return path
         return None
 
-    def read_range(self, path: Path, spec: RangeSpec, force_tab: bool = False) -> list[list[object]]:
-        encoding, sep = detect_text_format(path, force_tab=force_tab)
-        rows = _read_ragged_csv(path, encoding=encoding, sep=sep)
-        max_width = max((len(row) for row in rows), default=0)
-        padded = [row + [""] * (max_width - len(row)) for row in rows]
-        df = pd.DataFrame(padded, dtype=object)
-        start_row = max((spec.min_row or 1) - 1, 0)
-        if spec.max_row is None or spec.max_row == spec.min_row:
-            end_row = len(df)
-        else:
-            end_row = min(spec.max_row, len(df))
-        subset = df.iloc[start_row:end_row, spec.min_col - 1 : spec.max_col]
-        return subset.where(pd.notnull(subset), "").values.tolist()
+    def read_rows(self, path: Path, force_tab: bool = False) -> list[list[str]]:
+        """CSV 전체를 읽어 모든 행을 같은 폭으로 패딩한 문자열 표를 반환한다."""
+        rows = _read_ragged_csv(path, *detect_text_format(path, force_tab=force_tab))
+        width = max((len(row) for row in rows), default=0)
+        return [row + [""] * (width - len(row)) for row in rows]
 
 
 def _read_ragged_csv(path: Path, encoding: str, sep: str) -> list[list[str]]:
