@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -103,9 +104,10 @@ if run:
                 for warning in pipeline.warnings:
                     st.warning(warning)
                 st.success("정제가 완료되었습니다. 아래에서 결과 파일을 받아주세요.")
+                today = datetime.now().strftime("%y%m%d")
                 st.download_button(
                     "결과 엑셀 다운로드",
                     data=output_file.read_bytes(),
-                    file_name="KG에듀원_임용고시_통합가공.xlsm",
+                    file_name=f"가공된 raw파일_{today}.xlsm",
                     mime="application/vnd.ms-excel.sheet.macroEnabled.12",
                 )
