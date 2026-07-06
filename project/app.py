@@ -108,6 +108,6 @@ if run:
                 st.download_button(
                     "결과 엑셀 다운로드",
                     data=output_file.read_bytes(),
-                    file_name=f"가공된 raw파일_{today}.xlsm",
+                    file_name=f"가공된_raw파일_{today}.xlsm",
                     mime="application/vnd.ms-excel.sheet.macroEnabled.12",
                 )
