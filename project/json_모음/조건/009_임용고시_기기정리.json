@@ -1,0 +1,38 @@
+[
+  {
+    "nametag": "모바일",
+    "target_sheet": "종합시트",
+    "ref_column": "E",
+    "rules": [
+      {
+        "type": "simple",
+        "match": {
+          "column": "G",
+          "values": ["모바일", "휴대전화", "태블릿", "MO", "TV 화면"]
+        },
+        "action": {
+          "column": "G",
+          "value": "MO"
+        }
+      }
+    ]
+  },
+  {
+    "nametag": "PC",
+    "target_sheet": "종합시트",
+    "ref_column": "E",
+    "rules": [
+      {
+        "type": "simple",
+        "match": {
+          "column": "G",
+          "values": ["컴퓨터", "PC"]
+        },
+        "action": {
+          "column": "G",
+          "value": "PC"
+        }
+      }
+    ]
+  }
+]

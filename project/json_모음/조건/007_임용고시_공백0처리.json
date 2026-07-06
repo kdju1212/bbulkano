@@ -1,0 +1,68 @@
+[
+  {
+    "nametag": "네이버RAW_공백0처리",
+    "target_sheet": "네이버RAW",
+    "ref_column": "A",
+    "rules": [
+      {
+        "type": "simple",
+        "match": { "column": "G", "values": [""] },
+        "action": { "column": "G", "value": "0" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "H", "values": [""] },
+        "action": { "column": "H", "value": "0" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "I", "values": [""] },
+        "action": { "column": "I", "value": "0" }
+      }
+    ]
+  },
+  {
+    "nametag": "구글RAW_공백0처리",
+    "target_sheet": "구글RAW",
+    "ref_column": "A",
+    "rules": [
+      {
+        "type": "simple",
+        "match": { "column": "G", "values": [""] },
+        "action": { "column": "G", "value": "0" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "H", "values": [""] },
+        "action": { "column": "H", "value": "0" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "I", "values": [""] },
+        "action": { "column": "I", "value": "0" }
+      }
+    ]
+  },
+  {
+    "nametag": "PMAX_RAW_공백0처리",
+    "target_sheet": "PMAX_RAW",
+    "ref_column": "A",
+    "rules": [
+      {
+        "type": "simple",
+        "match": { "column": "I", "values": [""] },
+        "action": { "column": "I", "value": "0" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "J", "values": [""] },
+        "action": { "column": "J", "value": "0" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "K", "values": [""] },
+        "action": { "column": "K", "value": "0" }
+      }
+    ]
+  }
+]

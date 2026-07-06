@@ -1,0 +1,9 @@
+[
+  {
+    "nametag": "종합시트_필다운",
+    "process_type": "filldown",
+    "target_sheet": "종합시트",
+    "ref_column": "종합시트!F",
+    "range_top": "A6:D6"
+  }
+]

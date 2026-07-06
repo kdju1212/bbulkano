@@ -1,0 +1,79 @@
+[
+  {
+    "nametag": "네이버전환RAW",
+    "process_type": "filldown",
+    "target_sheet": "네이버전환RAW",
+    "ref_column": "네이버전환RAW!B",
+    "range_top": "J6:K6"
+  },
+  {
+    "nametag": "네이버RAW",
+    "process_type": "filldown",
+    "target_sheet": "네이버RAW",
+    "ref_column": "네이버RAW!B",
+    "range_top": "J6:Q6"
+  },
+  {
+    "nametag": "구글전환RAW",
+    "process_type": "filldown",
+    "target_sheet": "구글전환RAW",
+    "ref_column": "구글전환RAW!B",
+    "range_top": "I6:J6"
+  },
+  {
+    "nametag": "구글RAW",
+    "process_type": "filldown",
+    "target_sheet": "구글RAW",
+    "ref_column": "구글RAW!B",
+    "range_top": "J6:Q6"
+  },
+  {
+    "nametag": "카카오RAW",
+    "process_type": "filldown",
+    "target_sheet": "카카오RAW",
+    "ref_column": "카카오RAW!B",
+    "range_top": "N6"
+  },
+  {
+    "nametag": "PMAX_RAW",
+    "process_type": "filldown",
+    "target_sheet": "PMAX_RAW",
+    "ref_column": "PMAX_RAW!D",
+    "range_top": "A6:C6"
+  },
+  {
+    "nametag": "PMAX_RAW",
+    "process_type": "filldown",
+    "target_sheet": "PMAX_RAW",
+    "ref_column": "PMAX_RAW!D",
+    "range_top": "G6:H6"
+  },
+  {
+    "nametag": "PMAX_RAW",
+    "process_type": "filldown",
+    "target_sheet": "PMAX_RAW",
+    "ref_column": "PMAX_RAW!D",
+    "range_top": "L6:S6"
+  },
+  {
+    "nametag": "PMAX전환_RAW",
+    "process_type": "filldown",
+    "target_sheet": "PMAX전환_RAW",
+    "ref_column": "PMAX전환_RAW!A",
+    "range_top": "G6:H6"
+  },
+  {
+    "nametag": "구글_확장검색1",
+    "process_type": "filldown",
+    "target_sheet": "구글_확장검색",
+    "ref_column": "구글_확장검색!A",
+    "range_top": "J5:Q5"
+  },
+  {
+    "nametag": "구글_확장검색2",
+    "process_type": "filldown",
+    "target_sheet": "구글_확장검색",
+    "ref_column": "구글_확장검색!A",
+    "range_top": "S5:AG5"
+  }
+]

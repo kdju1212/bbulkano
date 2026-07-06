@@ -1,0 +1,31 @@
+[
+  {
+    "nametag": "구글_미포함_캠페인추가",
+    "target_sheet": "구글RAW",
+    "ref_column": "B",
+    "rules": [
+	{
+        "type": "multi",
+        "match": [
+          {"column": "A", "values": [""]},
+          {"column": "D", "values": ["KG에듀원_DSA"], "case_insensitive": true}
+        ],
+        "action": {
+          "column": "A",
+          "value": "동적"
+        }
+      },
+	{
+        "type": "multi",
+        "match": [
+          {"column": "A", "values": [""]},
+          {"column": "D", "contains_any": ["[22-03]"], "case_insensitive": true}
+        ],
+        "action": {
+          "column": "A",
+          "value": "확장검색"
+        }
+      }
+    ]
+  }
+]

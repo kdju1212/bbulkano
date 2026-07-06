@@ -1,0 +1,87 @@
+[
+  {
+    "nametag": "카카오MO",
+    "file": "카카오MO.CSV",
+    "target_sheet": "카카오RAW",
+    "map": [["A2:A","A6:A"],["B2:B","D6:D"],["C2:C","E6:E"],["D2:D","C6:C"],["E2:E","F6:F"],["F2:F","B6:B"],["H2:H","G6:G"],["I2:I","H6:H"],["K2:K","I6:I"],["V2:V","J6:J"],["Y2:Y","K6:K"],["T2:T","L6:L"],["W2:W","M6:M"]],
+    "skip_total": "x"
+  },
+    {
+    "nametag": "카카오PC",
+    "file": "카카오PC.CSV",
+    "target_sheet": "카카오RAW",
+    "map": [["A2:A","A:A"],["B2:B","D:D"],["C2:C","E:E"],["D2:D","C:C"],["E2:E","F:F"],["F2:F","B:B"],["H2:H","G:G"],["I2:I","H:H"],["K2:K","I:I"],["V2:V","J:J"],["Y2:Y","K:K"],["T2:T","L:L"],["W2:W","M:M"]],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "네이버RAW",
+    "file": "SA_RAW,1850585.CSV",
+    "target_sheet": "네이버RAW",
+    "map": [["A3:I","A6:I"]],
+    "skip_total": "x"
+  },
+{
+    "nametag": "네이버전환RAW",
+    "file": "SA_RAW_전환,1850585.CSV",
+    "target_sheet": "네이버전환RAW",
+    "map": [["A3:I","A6:I"]],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "구글SA",
+    "file": "SA_RAW.CSV",
+    "target_sheet": "구글RAW",
+    "format":"tab",
+    "map": [["A4:H4","A6:H"],["J4:J","I6:I"]],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "구글DSA",
+    "file": "SA_DSA_RAW.CSV",
+    "target_sheet": "구글RAW",
+    "format":"tab",
+    "map": [["A4:D","B:E"],["E4:E","G:G"],["F4:F","H:H"],["H4:H","I:I"]],
+    "marking": [["F","Dynamic search ads"], ["A","동적"] ],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "구글SA전환",
+    "file": "SA_RAW_전환.CSV",
+    "target_sheet": "구글전환RAW",
+    "format":"tab",
+    "map": [["A4:H","A6:H"]],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "구글_확장검색",
+    "file": "확장검색.CSV",
+    "target_sheet": "구글_확장검색",
+    "format":"tab",
+    "map": [["A4:E","A5:E"], ["G4:I","F5:H"]  ],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "구글DSA전환",
+    "file": "DSA_RAW_전환.CSV",
+    "target_sheet": "구글전환RAW",
+    "format":"tab",
+    "map": [["A4:D","A:D"],["E4:G","F:H"] ],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "PMAX_RAW",
+    "file": "PMAX.CSV",
+    "target_sheet": "PMAX_RAW",
+    "format":"tab",
+    "map": [["A4:C","D6:F"],["D4:E","I6:J"],["G4:G","K6:K"]],
+    "skip_total": "x"
+  },
+  {
+    "nametag": "PMAX_전환",
+    "file": "PMAX_전환.CSV",
+    "target_sheet": "PMAX전환_RAW",
+    "format":"tab",
+    "map": [["A4:F","A6:F"] ],
+    "skip_total": "x"
+  }
+]

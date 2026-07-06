@@ -1,0 +1,43 @@
+[
+  {
+    "media": "네이버RAW",
+    "source_sheet": "네이버RAW",
+    "target_sheet": "종합시트",
+    "map": [ ["A6:A", "R6:R"],  ["B6:M", "F6:Q"], ["P6:P", "S6:S"] ],
+    "marking": [ ["E", "네이버"]],
+    "skip_total": "x"
+  },
+  {
+    "media": "구글RAW",
+    "source_sheet": "구글RAW",
+    "target_sheet": "종합시트",
+    "map": [ ["A6:A", "R:R"],  ["B6:M", "F:Q"], ["P6:P", "S:S"] ],
+    "marking": [ ["E", "구글"]],
+    "skip_total": "x"
+  },
+  {
+    "media": "카카오RAW",
+    "source_sheet": "카카오RAW",
+    "target_sheet": "종합시트",
+    "map": [ ["A6:A", "R:R"],  ["B6:M", "F:Q"], ["N6:N", "S:S"] ],
+    "marking": [ ["E", "카카오"]],
+    "skip_total": "x"
+  },
+  {
+    "media": "구글_확장검색",
+    "source_sheet": "구글_확장검색",
+    "target_sheet": "종합시트",
+    "map": [ ["S5:AG", "E:S"] ],
+    "marking": [ ["A", "SA"], ["B", "SA"] ],
+    "skip_total": "x"
+  },
+  {
+    "media": "PMAX_RAW",
+    "source_sheet": "PMAX_RAW",
+    "target_sheet": "종합시트",
+    "map": [ ["A6:C", "T:V"],  ["D6:G", "F:I"], ["I6:O", "K:Q"], ["H6:H", "W:W"], ["R6:R", "X:X"] ],
+    "marking": [ ["E", "PMAX"]],
+    "skip_total": "x"
+  }
+]
+

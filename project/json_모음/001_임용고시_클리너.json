@@ -1,0 +1,62 @@
+[
+  {
+    "sheet": "네이버RAW",
+    "groups": [
+      {"range": "A:Q", "start_row": 7}
+    ]
+  },
+ {
+    "sheet": "네이버전환RAW",
+    "groups": [
+      {"range": "A:K", "start_row": 7}
+    ]
+  },
+   {
+    "sheet": "구글RAW",
+    "groups": [
+      {"range": "A:Q", "start_row": 7}
+    ]
+  },
+   {
+    "sheet": "구글전환RAW",
+    "groups": [
+      {"range": "A:J", "start_row": 7}
+    ]
+  },
+  {
+    "sheet": "카카오RAW",
+    "groups": [
+      {"range": "A:O", "start_row": 7}
+    ]
+  },
+  {
+    "sheet": "PMAX_RAW",
+    "groups": [
+      {"range": "A:S", "start_row": 7}
+    ]
+  },
+  {
+    "sheet": "PMAX전환_RAW",
+    "groups": [
+      {"range": "A:O", "start_row": 7}
+    ]
+  },
+  {
+    "sheet": "구글_확장검색",
+    "groups": [
+      {"range": "A:H", "start_row": 5}
+    ]
+  },
+  {
+    "sheet": "구글_확장검색",
+    "groups": [
+      {"range": "J:AG", "start_row": 6}
+    ]
+  },
+  {
+    "sheet": "종합시트",
+    "groups": [
+      {"range": "A:Y", "start_row": 7}
+    ]
+  }
+]

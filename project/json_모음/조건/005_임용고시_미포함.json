@@ -1,0 +1,42 @@
+[
+  {
+    "process_type": "filter_copy",
+    "nametag": "미포함_네이버",
+    "source_sheet": "네이버전환RAW",
+    "target_sheet": "네이버RAW",
+    "filter_conditions": [
+      {"column": "K", "value": "미포함"}
+    ],
+    "map": [
+      ["A:F", "A:F"]
+    ],
+    "action": "copy"
+  },
+  {
+    "process_type": "filldown",
+    "nametag": "필다운2차_네이버",
+    "target_sheet": "네이버RAW",
+    "ref_column": "B",
+    "range_top": "J6:Q6"
+  },
+  {
+    "process_type": "filter_copy",
+    "nametag": "미포함_구글",
+    "source_sheet": "구글전환RAW",
+    "target_sheet": "구글RAW",
+    "filter_conditions": [
+      {"column": "J", "value": "미포함"}
+    ],
+    "map": [
+      ["A:E", "B:F"]
+    ],
+    "action": "copy"
+  },
+  {
+    "process_type": "filldown",
+    "nametag": "필다운2차_구글",
+    "target_sheet": "구글RAW",
+    "ref_column": "B",
+    "range_top": "J6:Q6"
+  }
+]

@@ -1,0 +1,19 @@
+[
+  {
+    "process_type": "string_replace",
+    "nametag": "날짜_점_제거",
+    "target_sheet": "종합시트",
+    "target_column": "F",
+    "replacements": [
+      {"find": ".", "replace": "-"}
+    ]
+  },  
+ {
+    "process_type": "date_format",
+    "nametag": "날짜_서식_변환",
+    "target_sheet": "종합시트",
+    "target_column": "F",
+    "date_format": "yyyy/mm/dd",
+    "date_type": "YMD"
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "nametag": "구글 및 PMAX 데이터 정제",
+    "target_sheet": "구글전환RAW",
+    "ref_column": "A",
+    "rules": [
+      {
+        "type": "simple",
+        "match": { "column": "F", "values": ["PC_GA4(New) (web) purchase", "MO_GA4(New) (web) purchase"] },
+        "action": { "column": "F", "value": "구매" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "F", "values": ["PC_GA4(New) (web) 카톡문의클릭", "MO_GA4(New) (web) 카톡문의클릭"] },
+        "action": { "column": "F", "value": "상담문의완료" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "F", "values": ["PC_GA4(New) (web) 회원가입완료"] },
+        "action": { "column": "F", "value": "회원가입" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "C", "values": ["KG에듀원_DSA"] },
+        "action": { "column": "E", "value": "Dynamic search ads" }
+      }
+    ]
+  },
+  {
+    "nametag": "PMAX 시트 정제",
+    "target_sheet": "PMAX전환_RAW",
+    "ref_column": "A",
+    "rules": [
+      {
+        "type": "simple",
+        "match": { "column": "D", "values": ["PC_GA4(New) (web) purchase", "MO_GA4(New) (web) purchase"] },
+        "action": { "column": "D", "value": "구매" }
+      },
+      {
+        "type": "simple",
+        "match": { "column": "D", "values": ["PC_GA4(New) (web) 카톡문의클릭", "MO_GA4(New) (web) 카톡문의클릭"] },
+        "action": { "column": "D", "value": "상담문의완료" }
+      }
+    ]
+  }
+]
