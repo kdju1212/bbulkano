@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GA4 AI 대시보드
 
-## Getting Started
+여러 광고주의 GA4 데이터를 조회하고 AI 인사이트를 받는 개인용 분석 도구.
+네비게이션 헤더로 페이지를 이동하며, 선택한 Property와 기간은 모든 페이지에서 공유됩니다.
 
-First, run the development server:
+## 실행 방법
 
 ```bash
+npm install     # 최초 1회
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 http://localhost:3000 접속. (Node.js 18 이상 필요)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 페이지
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 탭 | 내용 |
+|---|---|
+| 대시보드 | KPI 카드(Users/Sessions/Event Count/Conversions/CVR) + 추이 차트 |
+| 유입 분석 | Source/Medium/Campaign별 성과 차트·테이블 |
+| 이벤트 분석 | 핵심 이벤트 발생 수·사용자·변화율 |
+| AI 분석 | 조회 데이터 기반 AI 인사이트 (STEP 6에서 OpenAI 연결) |
+| RAW 가공 | 재료 CSV 업로드 → 정제된 xlsm 다운로드 (`../project` 파이썬 파이프라인 호출) |
 
-## Learn More
+## RAW 가공 탭 사용 조건
 
-To learn more about Next.js, take a look at the following resources:
+이 저장소의 `project/` 폴더가 함께 있어야 하고(같이 clone하면 됨), 파이썬 의존성이 설치되어 있어야 합니다:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd ../project
+pip install -r requirements.txt
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+파이썬 명령이 `python`이 아니면 `.env.local`에 `PYTHON=py` 처럼 지정하세요.
 
-## Deploy on Vercel
+## 개발 진행 상태
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [x] STEP 1: 대시보드 UI (목데이터)
+- [x] 추가: RAW 가공 탭 (기존 엑셀 정제 도구 통합)
+- [ ] STEP 2: Google OAuth 연결 (`auth.ts` 준비됨 — `.env.local` 필요)
+- [ ] STEP 3: GA4 Property 목록 조회
+- [ ] STEP 4-5: GA4 Data API 실데이터 연결
+- [ ] STEP 6: OpenAI 분석
+- [ ] STEP 7(선택): Supabase 캐싱
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.env.local` 만들기: `.env.local.example`을 복사한 뒤 값 채우기 (git에 올라가지 않음).

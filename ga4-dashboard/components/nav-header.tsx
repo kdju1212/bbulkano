@@ -10,6 +10,7 @@ const TABS = [
   { href: "/acquisition", label: "유입 분석" },
   { href: "/events", label: "이벤트 분석" },
   { href: "/insights", label: "AI 분석" },
+  { href: "/raw-processor", label: "RAW 가공" },
 ];
 
 export function NavHeader() {
