@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useDashboard } from "@/lib/dashboard-context";
-import { MOCK_PROPERTIES } from "@/lib/mock-data";
 
 const TABS = [
   { href: "/", label: "대시보드" },
@@ -15,7 +15,9 @@ const TABS = [
 
 export function NavHeader() {
   const pathname = usePathname();
-  const { propertyId, setPropertyId, range, setRange } = useDashboard();
+  const { data: session, status } = useSession();
+  const { propertyId, setPropertyId, properties, isRealProperties, propertiesError, range, setRange } =
+    useDashboard();
 
   return (
     <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
@@ -47,12 +49,13 @@ export function NavHeader() {
           <select
             value={propertyId}
             onChange={(e) => setPropertyId(e.target.value)}
-            className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="max-w-56 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
             aria-label="GA4 Property 선택"
+            title={isRealProperties ? "실제 GA4 Property" : "목데이터 (로그인하면 실제 목록으로 교체)"}
           >
-            {MOCK_PROPERTIES.map((p) => (
+            {properties.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name}
+                {isRealProperties ? p.name : `${p.name} (목)`}
               </option>
             ))}
           </select>
@@ -96,8 +99,34 @@ export function NavHeader() {
               />
             </div>
           )}
+
+          {status === "authenticated" ? (
+            <div className="flex items-center gap-2">
+              <span className="hidden text-xs text-zinc-500 sm:inline">{session.user?.email}</span>
+              <button
+                onClick={() => signOut()}
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              >
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => signIn("google")}
+              disabled={status === "loading"}
+              className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              Google 로그인
+            </button>
+          )}
         </div>
       </div>
+
+      {propertiesError && (
+        <div className="border-t border-amber-200 bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          {propertiesError}
+        </div>
+      )}
     </header>
   );
 }

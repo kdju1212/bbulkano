@@ -4,14 +4,14 @@
 
 import { useState } from "react";
 import { useDashboard } from "@/lib/dashboard-context";
-import { MOCK_AI_INSIGHT, MOCK_PROPERTIES } from "@/lib/mock-data";
+import { MOCK_AI_INSIGHT } from "@/lib/mock-data";
 
 export default function InsightsPage() {
-  const { propertyId, rangeDays } = useDashboard();
+  const { propertyId, rangeDays, properties } = useDashboard();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  const propertyName = MOCK_PROPERTIES.find((p) => p.id === propertyId)?.name ?? propertyId;
+  const propertyName = properties.find((p) => p.id === propertyId)?.name ?? propertyId;
 
   const runAnalysis = () => {
     setLoading(true);

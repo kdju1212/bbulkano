@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DashboardProvider } from "@/lib/dashboard-context";
 import { NavHeader } from "@/components/nav-header";
+import { Providers } from "@/components/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,10 +31,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-        <DashboardProvider>
-          <NavHeader />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-        </DashboardProvider>
+        <Providers>
+          <DashboardProvider>
+            <NavHeader />
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
+          </DashboardProvider>
+        </Providers>
       </body>
     </html>
   );

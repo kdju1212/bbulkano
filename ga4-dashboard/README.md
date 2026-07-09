@@ -37,10 +37,12 @@ pip install -r requirements.txt
 
 - [x] STEP 1: 대시보드 UI (목데이터)
 - [x] 추가: RAW 가공 탭 (기존 엑셀 정제 도구 통합)
-- [ ] STEP 2: Google OAuth 연결 (`auth.ts` 준비됨 — `.env.local` 필요)
-- [ ] STEP 3: GA4 Property 목록 조회
+- [x] STEP 2: Google OAuth 로그인 (`.env.local` 필요)
+- [x] STEP 3: GA4 Property 목록 조회 (로그인하면 헤더 드롭다운이 실제 목록으로 교체)
 - [ ] STEP 4-5: GA4 Data API 실데이터 연결
-- [ ] STEP 6: OpenAI 분석
-- [ ] STEP 7(선택): Supabase 캐싱
+- [ ] STEP 6: AI 분석 (Groq API)
+
+DB는 사용하지 않는다 (개인용 도구라 실시간 조회로 충분).
 
 `.env.local` 만들기: `.env.local.example`을 복사한 뒤 값 채우기 (git에 올라가지 않음).
+`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `NEXTAUTH_SECRET` 세 개가 로그인에 필수다.
