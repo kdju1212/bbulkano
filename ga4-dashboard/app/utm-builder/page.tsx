@@ -21,6 +21,19 @@ const UTM_FIELDS: Array<{ key: keyof UtmParams; label: string; placeholder: stri
   { key: "content", label: "utm_content", placeholder: "" },
 ];
 
+// encodeURIComponent는 한글을 %EC%95... 식으로 퍼센트 인코딩해서 사람이 못 읽게 만든다.
+// UTM 값은 쿼리스트링 구조를 깨는 문자(공백, &, =, #, +, %)만 최소한으로 escape하고
+// 한글을 포함한 나머지 문자는 그대로 둔다 (대부분의 광고/분석 플랫폼이 원문 그대로 잘 처리함).
+function encodeUtmValue(value: string): string {
+  return value
+    .replace(/%/g, "%25")
+    .replace(/&/g, "%26")
+    .replace(/=/g, "%3D")
+    .replace(/#/g, "%23")
+    .replace(/\+/g, "%2B")
+    .replace(/ /g, "+");
+}
+
 function splitLines(text: string): string[] {
   return text
     .split("\n")
@@ -36,7 +49,7 @@ function buildUrl(base: string, utm: UtmParams, keyword: string): string {
   const query = entries
     .map(([name, value]) => {
       const substituted = value.replaceAll("{키워드}", keyword).replaceAll("{keyword}", keyword);
-      return `${name}=${encodeURIComponent(substituted)}`;
+      return `${name}=${encodeUtmValue(substituted)}`;
     })
     .join("&");
   return base.trim() + (base.includes("?") ? "&" : "?") + query;
