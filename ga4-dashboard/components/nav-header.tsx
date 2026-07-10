@@ -8,6 +8,7 @@ import { useDashboard } from "@/lib/dashboard-context";
 const TABS = [
   { href: "/", label: "대시보드" },
   { href: "/raw-processor", label: "RAW 가공" },
+  { href: "/utm-builder", label: "UTM 빌더" },
 ];
 
 const DASHBOARD_SUB_PATHS = ["/", "/acquisition", "/events", "/insights"];
