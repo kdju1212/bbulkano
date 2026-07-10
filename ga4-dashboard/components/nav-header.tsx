@@ -7,11 +7,10 @@ import { useDashboard } from "@/lib/dashboard-context";
 
 const TABS = [
   { href: "/", label: "대시보드" },
-  { href: "/acquisition", label: "유입 분석" },
-  { href: "/events", label: "이벤트 분석" },
-  { href: "/insights", label: "AI 분석" },
   { href: "/raw-processor", label: "RAW 가공" },
 ];
+
+const DASHBOARD_SUB_PATHS = ["/", "/acquisition", "/events", "/insights"];
 
 export function NavHeader() {
   const pathname = usePathname();
@@ -28,7 +27,8 @@ export function NavHeader() {
 
         <nav className="flex gap-1">
           {TABS.map((tab) => {
-            const active = pathname === tab.href;
+            const active =
+              tab.href === "/" ? DASHBOARD_SUB_PATHS.includes(pathname) : pathname === tab.href;
             return (
               <Link
                 key={tab.href}

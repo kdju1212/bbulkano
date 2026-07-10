@@ -14,13 +14,15 @@ npm run dev
 
 ## 페이지
 
-| 탭 | 내용 |
-|---|---|
-| 대시보드 | KPI 카드(Users/Sessions/Event Count/Conversions/CVR) + 추이 차트 |
-| 유입 분석 | Source/Medium/Campaign별 성과 차트·테이블 |
-| 이벤트 분석 | 핵심 이벤트 발생 수·사용자·변화율 |
-| AI 분석 | 조회 데이터 기반 AI 인사이트 (STEP 6에서 OpenAI 연결) |
-| RAW 가공 | 재료 CSV 업로드 → 정제된 xlsm 다운로드 (`../project` 파이썬 파이프라인 호출) |
+상단 헤더는 **대시보드 / RAW 가공** 두 개만 있고, 대시보드 안에 서브 탭으로 나뉩니다:
+
+| 헤더 탭 | 서브 탭 | 내용 |
+|---|---|---|
+| 대시보드 | 개요 | KPI 카드(Users/Sessions/Event Count/Conversions/CVR) + 추이 차트 |
+| | 유입 분석 | Source/Medium/Campaign별 성과 차트·테이블 |
+| | 이벤트 분석 | 핵심 이벤트 발생 수·사용자·변화율 |
+| | AI 분석 | GA4 데이터를 근거로 대화하는 챗봇 (Groq) |
+| RAW 가공 | — | 재료 CSV 업로드 → 정제된 xlsm 다운로드 (`../project` 파이썬 파이프라인 호출) |
 
 ## RAW 가공 탭 사용 조건
 

@@ -83,7 +83,7 @@ export default function InsightsPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] flex-col space-y-4">
+    <div className="flex h-[calc(100vh-190px)] flex-col space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold">AI 분석</h1>
