@@ -40,7 +40,7 @@ pip install -r requirements.txt
 - [x] STEP 2: Google OAuth 로그인 (`.env.local` 필요)
 - [x] STEP 3: GA4 Property 목록 조회 (로그인하면 헤더 드롭다운이 실제 목록으로 교체)
 - [x] STEP 4-5: GA4 Data API 실데이터 연결 (로그인하면 KPI/유입/이벤트가 실데이터)
-- [x] STEP 6: AI 분석 (Groq API — `GROQ_API_KEY` 필요)
+- [x] STEP 6: AI 분석 — GA4 데이터를 근거로 대화하는 챗봇 (Groq API — `GROQ_API_KEY` 필요)
 
 DB는 사용하지 않는다 (개인용 도구라 실시간 조회로 충분).
 
