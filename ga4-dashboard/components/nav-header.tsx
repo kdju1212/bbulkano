@@ -7,7 +7,7 @@ import { useDashboard } from "@/lib/dashboard-context";
 
 const TABS = [
   { href: "/", label: "대시보드" },
-  { href: "/raw-processor", label: "RAW 가공" },
+  { href: "/raw-processor", label: "RAW 가공", requiresAuth: true },
   { href: "/utm-builder", label: "UTM 빌더" },
 ];
 
@@ -19,6 +19,8 @@ export function NavHeader() {
   const { propertyId, setPropertyId, properties, isRealProperties, propertiesError, range, setRange } =
     useDashboard();
 
+  const visibleTabs = TABS.filter((tab) => !tab.requiresAuth || status === "authenticated");
+
   return (
     <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
@@ -27,7 +29,7 @@ export function NavHeader() {
         </span>
 
         <nav className="flex gap-1">
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab) => {
             const active =
               tab.href === "/" ? DASHBOARD_SUB_PATHS.includes(pathname) : pathname === tab.href;
             return (

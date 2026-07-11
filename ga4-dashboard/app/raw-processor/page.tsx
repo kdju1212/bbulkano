@@ -2,8 +2,10 @@
 
 // RAW 가공 — 재료 CSV를 업로드하면 파이썬 파이프라인이 정제된 xlsm을 만들어준다.
 // (기존 project/ 폴더의 검증된 파이프라인을 그대로 호출)
+// 로그인한 사용자만 사용할 수 있다.
 
 import { useRef, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
 
 type Result = {
   matched: Record<string, string>;
@@ -14,11 +16,31 @@ type Result = {
 };
 
 export default function RawProcessorPage() {
+  const { status } = useSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+
+  if (status !== "authenticated") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+        <h1 className="text-lg font-bold">RAW 가공</h1>
+        <p className="text-sm text-zinc-500">
+          {status === "loading" ? "로그인 상태를 확인하는 중..." : "로그인한 사용자만 사용할 수 있습니다."}
+        </p>
+        {status === "unauthenticated" && (
+          <button
+            onClick={() => signIn("google")}
+            className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            Google 로그인
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const onSelectFiles = (list: FileList | null) => {
     if (!list) return;

@@ -5,6 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 600;
@@ -45,6 +46,11 @@ function runPython(scriptPath: string, args: string[]): Promise<{ stdout: string
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
   const form = await request.formData();
   const files = form.getAll("files").filter((f): f is File => f instanceof File);
   if (files.length === 0) {
