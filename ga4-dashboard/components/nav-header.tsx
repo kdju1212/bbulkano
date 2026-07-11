@@ -31,7 +31,7 @@ export function NavHeader() {
         <nav className="flex gap-1">
           {visibleTabs.map((tab) => {
             const active =
-              tab.href === "/" ? DASHBOARD_SUB_PATHS.includes(pathname) : pathname === tab.href;
+              tab.href === "/" ? DASHBOARD_SUB_PATHS.includes(pathname) : pathname.startsWith(tab.href);
             return (
               <Link
                 key={tab.href}

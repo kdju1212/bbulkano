@@ -10,9 +10,16 @@ import { auth } from "@/auth";
 export const runtime = "nodejs";
 export const maxDuration = 600;
 
-function projectDir(): string {
-  return process.env.RAW_PROJECT_DIR ?? path.resolve(process.cwd(), "..", "project");
-}
+// 광고주별 파이썬 파이프라인 매핑.
+// 새 광고주 코드가 준비되면 여기에 { 광고주키: { dir, script } }를 추가하면 된다.
+const CLIENT_PIPELINES: Record<string, { dir: string; script: string }> = {
+  "kg-eduone": {
+    dir: process.env.RAW_PROJECT_DIR ?? path.resolve(process.cwd(), "..", "project"),
+    script: "cli_web.py",
+  },
+  // "dongkook": { dir: ..., script: ... },  // 준비중
+  // "gangchon": { dir: ..., script: ... },  // 준비중
+};
 
 function pythonCommand(): string {
   if (process.env.PYTHON) return process.env.PYTHON;
@@ -52,6 +59,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   const form = await request.formData();
+  const client = String(form.get("client") ?? "kg-eduone");
+  const pipeline = CLIENT_PIPELINES[client];
+  if (!pipeline) {
+    return NextResponse.json({ error: `${client} 가공은 아직 준비중입니다.` }, { status: 400 });
+  }
   const files = form.getAll("files").filter((f): f is File => f instanceof File);
   if (files.length === 0) {
     return NextResponse.json({ error: "업로드된 파일이 없습니다." }, { status: 400 });
@@ -67,7 +79,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const outputFile = path.join(tmpDir, "output.xlsm");
-    const script = path.join(projectDir(), "cli_web.py");
+    const script = path.join(pipeline.dir, pipeline.script);
     const { stdout } = await runPython(script, [
       "--materials-dir",
       materialsDir,
