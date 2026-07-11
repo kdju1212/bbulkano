@@ -22,17 +22,19 @@ npm run dev
 | | 유입 분석 | Source/Medium/Campaign별 성과 차트·테이블 |
 | | 이벤트 분석 | 핵심 이벤트 발생 수·사용자·변화율 |
 | | AI 분석 | GA4 데이터를 근거로 대화하는 챗봇 (Groq) |
-| RAW 가공 | — | 재료 CSV 업로드 → 정제된 xlsm 다운로드 (`../project` 파이썬 파이프라인 호출) |
+| RAW 가공 | — | 재료 CSV 업로드 → 정제된 xlsm 다운로드 (`../pipelines/<광고주>/` 파이썬 파이프라인 호출) |
 | UTM 빌더 | — | 키워드/DA 토글. 키워드 모드: 키워드ID·키워드 목록 + UTM → 네이버 CSV(CP949) 다운로드. DA 모드: URL + UTM → 완성 URL 복사 |
 
 ## RAW 가공 탭 사용 조건
 
-이 저장소의 `project/` 폴더가 함께 있어야 하고(같이 clone하면 됨), 파이썬 의존성이 설치되어 있어야 합니다:
+이 저장소의 `pipelines/` 폴더가 함께 있어야 하고(같이 clone하면 됨), 파이썬 의존성이 설치되어 있어야 합니다:
 
 ```bash
-cd ../project
+cd ../pipelines/kg-eduone
 pip install -r requirements.txt
 ```
+
+광고주별 파이프라인 구조와 새 광고주 추가 방법은 `../pipelines/README.md` 참고.
 
 파이썬 명령이 `python`이 아니면 `.env.local`에 `PYTHON=py` 처럼 지정하세요.
 

@@ -10,15 +10,15 @@ import { auth } from "@/auth";
 export const runtime = "nodejs";
 export const maxDuration = 600;
 
-// 광고주별 파이썬 파이프라인 매핑.
-// 새 광고주 코드가 준비되면 여기에 { 광고주키: { dir, script } }를 추가하면 된다.
+// 광고주별 파이썬 파이프라인 매핑 — 광고주마다 폴더를 완전히 분리해서 유지보수한다.
+// 새 광고주 코드가 준비되면 pipelines/<광고주>/cli_web.py 를 만들고 여기에 한 줄 추가.
+const PIPELINES_ROOT =
+  process.env.RAW_PIPELINES_DIR ?? path.resolve(process.cwd(), "..", "pipelines");
+
 const CLIENT_PIPELINES: Record<string, { dir: string; script: string }> = {
-  "kg-eduone": {
-    dir: process.env.RAW_PROJECT_DIR ?? path.resolve(process.cwd(), "..", "project"),
-    script: "cli_web.py",
-  },
-  // "dongkook": { dir: ..., script: ... },  // 준비중
-  // "gangchon": { dir: ..., script: ... },  // 준비중
+  "kg-eduone": { dir: path.join(PIPELINES_ROOT, "kg-eduone"), script: "cli_web.py" },
+  // "dongkook": { dir: path.join(PIPELINES_ROOT, "dongkook"), script: "cli_web.py" },  // 준비중
+  // "gangchon": { dir: path.join(PIPELINES_ROOT, "gangchon"), script: "cli_web.py" },  // 준비중
 };
 
 function pythonCommand(): string {
