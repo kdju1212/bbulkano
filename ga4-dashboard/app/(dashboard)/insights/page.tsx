@@ -23,6 +23,9 @@ export default function InsightsPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Groq 요청 제한(429) 등으로 실패했을 때, 같은 대화를 다시 보낼 수 있도록 보관
+  const [retryPayload, setRetryPayload] = useState<ChatMessage[] | null>(null);
+  const [retryCountdown, setRetryCountdown] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const propertyName = properties.find((p) => p.id === propertyId)?.name ?? propertyId;
@@ -31,20 +34,24 @@ export default function InsightsPage() {
   useEffect(() => {
     setMessages([]);
     setError(null);
+    setRetryPayload(null);
+    setRetryCountdown(0);
   }, [propertyId, range.preset, range.startDate, range.endDate]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
 
-  const send = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || sending) return;
+  // 재시도 가능 시각까지 1초마다 카운트다운
+  useEffect(() => {
+    if (retryCountdown <= 0) return;
+    const timer = setTimeout(() => setRetryCountdown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [retryCountdown]);
 
-    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
-    setMessages(nextMessages);
-    setInput("");
+  const callApi = async (nextMessages: ChatMessage[]) => {
     setError(null);
+    setRetryPayload(null);
     setSending(true);
 
     if (!isRealProperties) {
@@ -73,13 +80,31 @@ export default function InsightsPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? `요청 실패 (${res.status})`);
+      if (!res.ok) {
+        setRetryPayload(nextMessages);
+        setRetryCountdown(data.rateLimited ? Math.max(1, Number(data.retryAfterSeconds) || 20) : 0);
+        throw new Error(data.error ?? `요청 실패 (${res.status})`);
+      }
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply as string }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSending(false);
     }
+  };
+
+  const send = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || sending) return;
+    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
+    setMessages(nextMessages);
+    setInput("");
+    callApi(nextMessages);
+  };
+
+  const retry = () => {
+    if (!retryPayload || sending || retryCountdown > 0) return;
+    callApi(retryPayload);
   };
 
   return (
@@ -150,7 +175,16 @@ export default function InsightsPage() {
 
       {error && (
         <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
-          {error}
+          <p>{error}</p>
+          {retryPayload && (
+            <button
+              onClick={retry}
+              disabled={sending || retryCountdown > 0}
+              className="mt-2 rounded-md border border-red-300 px-3 py-1 text-xs font-medium hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700 dark:hover:bg-red-900"
+            >
+              {retryCountdown > 0 ? `${retryCountdown}초 후 다시 시도 가능` : "다시 시도"}
+            </button>
+          )}
         </div>
       )}
 

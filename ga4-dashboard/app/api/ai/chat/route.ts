@@ -98,6 +98,18 @@ export async function POST(request: Request): Promise<NextResponse> {
       }),
     });
     if (!groqRes.ok) {
+      if (groqRes.status === 429) {
+        const retryAfterHeader = groqRes.headers.get("retry-after");
+        const retryAfterSeconds = retryAfterHeader ? Math.max(1, Math.ceil(Number(retryAfterHeader))) : 20;
+        return NextResponse.json(
+          {
+            error: `Groq 무료 요청 한도에 걸렸습니다. ${retryAfterSeconds}초 후 다시 시도해주세요.`,
+            rateLimited: true,
+            retryAfterSeconds,
+          },
+          { status: 429 },
+        );
+      }
       const text = await groqRes.text();
       return NextResponse.json(
         { error: `Groq API 오류 (${groqRes.status}): ${text.slice(0, 300)}` },
