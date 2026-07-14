@@ -51,3 +51,23 @@ DB는 사용하지 않는다 (개인용 도구라 실시간 조회로 충분).
 
 `.env.local` 만들기: `.env.local.example`을 복사한 뒤 값 채우기 (git에 올라가지 않음).
 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `NEXTAUTH_SECRET` 세 개가 로그인에 필수다.
+
+## Render 배포
+
+저장소 루트의 `Dockerfile`이 Node.js(웹) + Python(RAW 가공)을 한 이미지에 담는다.
+빌드 컨텍스트는 반드시 **저장소 루트**여야 한다 (`ga4-dashboard/`와 `pipelines/`를 함께 COPY하기 때문).
+
+1. Render 대시보드 → **New → Web Service** → 이 GitHub 저장소 연결
+2. **Environment**: Docker 선택, Dockerfile Path `./Dockerfile`, Root Directory는 비워둠(저장소 루트)
+3. Environment Variables 설정:
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — 기존 값 재사용
+   - `NEXTAUTH_URL` — Render가 배정한 도메인 (예: `https://ga4-ai-dashboard.onrender.com`)
+   - `NEXTAUTH_SECRET` — 배포용으로 새로 강하게 생성 (Render의 "Generate" 버튼 사용 가능)
+   - `GROQ_API_KEY` — 기존 값 재사용
+4. Google Cloud Console → OAuth 클라이언트 → **승인된 리디렉션 URI**에 추가:
+   `https://<배포도메인>/api/auth/callback/google`
+5. Google Cloud Console → OAuth 동의 화면 → **테스트 사용자**는 기존 목록 그대로 유지됨 (배포와 무관)
+
+`render.yaml`(Blueprint)이 저장소 루트에 있어서 "New → Blueprint"로도 배포 가능 (비밀값은 배포 후 대시보드에서 직접 입력).
+
+무료 플랜은 일정 시간 요청이 없으면 슬립 상태가 되고, 다음 요청 시 1분 내외 콜드 스타트가 걸린다 — 개인용 도구 특성상 크게 문제되지 않는다.

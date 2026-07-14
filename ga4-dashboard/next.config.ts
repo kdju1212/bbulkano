@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Docker 배포용 최소 실행 번들 생성 (Render 등 컨테이너 호스팅)
+  output: "standalone",
   async redirects() {
     return [
       {

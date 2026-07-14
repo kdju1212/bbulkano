@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/.venv
+**/pyenv
+**/__pycache__
+**/*.pyc
+**/.git
+**/.env
+**/.env.local
+!**/.env.local.example
+**/output
+ga4-dashboard/next-env.d.ts
