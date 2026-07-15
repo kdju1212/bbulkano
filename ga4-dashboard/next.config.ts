@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
         destination: "/raw-processor/kg-eduone",
         permanent: false,
       },
+      {
+        // 네이버 관리 기본 진입점 → 소재 리스트화 탭
+        source: "/naver-management",
+        destination: "/naver-management/creative-list",
+        permanent: false,
+      },
     ];
   },
 };

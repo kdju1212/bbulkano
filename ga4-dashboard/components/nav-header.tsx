@@ -9,6 +9,7 @@ const TABS = [
   { href: "/", label: "대시보드" },
   { href: "/raw-processor", label: "RAW 가공", requiresAuth: true },
   { href: "/utm-builder", label: "UTM 빌더" },
+  { href: "/naver-management", label: "네이버 관리" },
 ];
 
 const DASHBOARD_SUB_PATHS = ["/", "/acquisition", "/events", "/insights"];

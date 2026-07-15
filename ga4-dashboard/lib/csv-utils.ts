@@ -9,7 +9,13 @@ export function parseCSVText(text: string): string[][] {
     .map(parseCSVLine);
 }
 
-function parseCSVLine(line: string): string[] {
+/** parseCSVText와 달리 빈 줄도 그대로 보존한다 (사용자가 헤더 시작 행을 직접 고르는 UI용). */
+export function splitCSVLines(text: string): string[][] {
+  const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  return clean.replace(/\r\n/g, "\n").split("\n").map(parseCSVLine);
+}
+
+export function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let cur = "";
   let inQuotes = false;
