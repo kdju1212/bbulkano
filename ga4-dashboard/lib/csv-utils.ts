@@ -56,6 +56,24 @@ function escapeCsvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
+/** UTF-8로 먼저 읽고 깨진 문자(대체문자) 비율이 높으면 EUC-KR로 재시도한다. */
+export function readFileWithEncoding(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const tryRead = (enc: string) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = String(e.target?.result ?? "");
+        const corruptRatio = (text.match(/�/g)?.length ?? 0) / (text.length || 1);
+        if (enc === "UTF-8" && corruptRatio > 0.01) tryRead("EUC-KR");
+        else resolve(text);
+      };
+      reader.onerror = () => reject(new Error(`파일 읽기 실패 (${enc})`));
+      reader.readAsText(file, enc);
+    };
+    tryRead("UTF-8");
+  });
+}
+
 /** UTF-8 BOM CSV로 즉시 다운로드한다 (서버 왕복 없이 브라우저에서 완결). */
 export function downloadCsv(filename: string, headers: string[], rows: string[][]): void {
   const lines = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(","));

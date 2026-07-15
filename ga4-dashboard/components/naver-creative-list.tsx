@@ -6,7 +6,7 @@
 // 계산해준다. 참고 원본: 자동화TF_솔루션/modules/네이버/소재관리/네이버_소재_리스트화_fix.html
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { downloadCsv, splitCSVLines } from "@/lib/csv-utils";
+import { downloadCsv, readFileWithEncoding, splitCSVLines } from "@/lib/csv-utils";
 import {
   type AdRow,
   type CampaignInfo,
@@ -97,24 +97,6 @@ function autoMatchPerfCol(role: PerfRole, headers: string[], rawRows: string[][]
     }
   }
   return "";
-}
-
-/** UTF-8로 먼저 읽고 깨진 문자(replacement char) 비율이 높으면 EUC-KR로 재시도한다. */
-function readFileWithEncoding(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const tryRead = (enc: string) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = String(e.target?.result ?? "");
-        const corruptRatio = (text.match(/�/g)?.length ?? 0) / (text.length || 1);
-        if (enc === "UTF-8" && corruptRatio > 0.01) tryRead("EUC-KR");
-        else resolve(text);
-      };
-      reader.onerror = () => reject(new Error(`파일 읽기 실패 (${enc})`));
-      reader.readAsText(file, enc);
-    };
-    tryRead("UTF-8");
-  });
 }
 
 export function NaverCreativeList() {
