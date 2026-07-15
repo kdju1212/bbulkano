@@ -23,7 +23,7 @@ npm run dev
 | | 이벤트 분석 | 핵심 이벤트 발생 수·사용자·변화율 |
 | | AI 분석 | GA4 데이터를 근거로 대화하는 챗봇 (Groq) |
 | RAW 가공 | — | 재료 CSV 업로드 → 정제된 xlsm 다운로드 (`../pipelines/<광고주>/` 파이썬 파이프라인 호출) |
-| UTM 빌더 | — | 키워드/DA 토글. 키워드 모드: 키워드ID·키워드 목록 + UTM → 네이버 CSV(CP949) 다운로드. DA 모드: URL + UTM → 완성 URL 복사 |
+| UTM 빌더 | — | 키워드/캠페인·그룹/DA 토글. 키워드 모드: 키워드ID·키워드 목록 + UTM → 네이버 CSV(CP949) 다운로드. 캠페인·그룹 모드: 캠페인/광고그룹 리포트 CSV 업로드 → 캠페인ID·광고그룹ID를 utm_campaign·utm_content로 자동 치환해 UTM 결합 CSV 다운로드. DA 모드: URL + UTM → 완성 URL 복사 |
 
 ## RAW 가공 탭 사용 조건
 

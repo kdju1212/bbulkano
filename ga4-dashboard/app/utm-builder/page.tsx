@@ -2,9 +2,11 @@
 
 // UTM 빌더
 // - 키워드 모드: 키워드ID/키워드 목록 + URL·UTM → 네이버 검색광고 '키워드 URL 일괄수정' CSV
+// - 캠페인·그룹 모드: 캠페인/광고그룹 리포트 CSV 업로드 → ID를 utm_campaign/utm_content로 자동 치환해 결합
 // - DA 모드: URL + UTM만 입력해서 완성된 URL 하나를 복사
 
 import { useMemo, useState } from "react";
+import { CampaignUtmMode } from "@/components/campaign-utm-mode";
 
 type UtmParams = {
   source: string;
@@ -14,7 +16,7 @@ type UtmParams = {
   content: string;
 };
 
-type Mode = "keyword" | "da";
+type Mode = "keyword" | "campaign" | "da";
 
 const UTM_FIELDS: Array<{ key: keyof UtmParams; label: string; placeholder: string }> = [
   { key: "source", label: "utm_source", placeholder: "naver" },
@@ -166,13 +168,16 @@ export default function UtmBuilderPage() {
           <p className="text-sm text-zinc-500">
             {mode === "keyword"
               ? "키워드ID·키워드 목록과 UTM 값을 입력하면 네이버 검색광고 '키워드 URL 일괄수정' 업로드용 CSV를 만들어줍니다."
-              : "URL과 UTM 값을 입력하면 완성된 URL을 바로 복사할 수 있습니다."}
+              : mode === "campaign"
+                ? "캠페인/광고그룹 리포트 CSV를 업로드하면 캠페인ID·광고그룹ID를 utm_campaign·utm_content로 자동 치환해 UTM을 결합해줍니다."
+                : "URL과 UTM 값을 입력하면 완성된 URL을 바로 복사할 수 있습니다."}
           </p>
         </div>
         <div className="flex shrink-0 rounded-md border border-zinc-300 text-sm dark:border-zinc-700">
           {(
             [
               ["keyword", "키워드"],
+              ["campaign", "캠페인·그룹"],
               ["da", "DA"],
             ] as const
           ).map(([value, label]) => (
@@ -296,6 +301,8 @@ export default function UtmBuilderPage() {
             {downloading ? "생성 중..." : `CSV 다운로드 (${keywordIds.length}행)`}
           </button>
         </>
+      ) : mode === "campaign" ? (
+        <CampaignUtmMode />
       ) : (
         <div className="max-w-xl space-y-3">
           <div>
