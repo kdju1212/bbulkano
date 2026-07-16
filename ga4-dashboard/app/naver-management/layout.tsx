@@ -1,9 +1,10 @@
 "use client";
 
-// 네이버 관리 공통 레이아웃 — 네이버 대량관리 도구별 서브 탭.
+// 네이버 관리 공통 레이아웃 — 로그인 확인 + 네이버 대량관리 도구별 서브 탭.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 
 const TABS = [
   { href: "/naver-management/creative-list", label: "소재 리스트화" },
@@ -12,6 +13,26 @@ const TABS = [
 
 export default function NaverManagementLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { status } = useSession();
+
+  if (status !== "authenticated") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+        <h1 className="text-lg font-bold">네이버 관리</h1>
+        <p className="text-sm text-zinc-500">
+          {status === "loading" ? "로그인 상태를 확인하는 중..." : "로그인한 사용자만 사용할 수 있습니다."}
+        </p>
+        {status === "unauthenticated" && (
+          <button
+            onClick={() => signIn("google")}
+            className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            Google 로그인
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
