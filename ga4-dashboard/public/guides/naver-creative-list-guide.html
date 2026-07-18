@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>네이버 소재 리스트 생성 &amp; UTM 결합기 v2.0 사용설명서</title>
+<style>
+  /* ══════════════════════════════════════════
+     디자인 토큰 (소재 리스트화 툴 고유 스타일 미러링)
+  ══════════════════════════════════════════ */
+  :root {
+    --bg:       #0f1117;
+    --surface:  #1a1d27;
+    --surface2: #22263a;
+    --border:   #2e3248;
+    --border2:  #3d4266;
+    --accent:   #03c75a; /* 네이버 그린 */
+    --accent2:  #00a8e0; /* 블루 */
+    --accent3:  #ff6b35; /* 오렌지 */
+    --text:     #e8eaf0;
+    --text2:    #9aa0b8;
+    --text3:    #6b7199;
+    --danger:   #ff4757;
+    --warn:     #ffa502;
+    --radius:   8px;
+    --font:     'Noto Sans KR', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  /* ══════════════════════════════════════════
+     리셋 & 베이스
+  ══════════════════════════════════════════ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ══════════════════════════════════════════
+     헤더 영역
+  ══════════════════════════════════════════ */
+  .header {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; color: #fff; }
+  .header-ver { font-size: 11px; color: var(--text2); margin-left: auto; background: var(--surface2); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); font-family: var(--font-mono); }
+
+  /* ══════════════════════════════════════════
+     레이아웃 & 본문 컨테이너
+  ══════════════════════════════════════════ */
+  .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+  h2 { font-size: 18px; font-weight: 700; margin: 36px 0 16px 0; color: #fff; display: flex; align-items: center; gap: 8px; }
+  h2::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--accent); border-radius: 2px; }
+  h3 { font-size: 14px; font-weight: 600; margin: 24px 0 12px 0; color: var(--accent2); }
+
+  p { margin-bottom: 14px; color: var(--text); }
+  b { color: #fff; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* ══════════════════════════════════════════
+     알림창 스타일 (인라인 배너)
+  ══════════════════════════════════════════ */
+  .alert { border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px; line-height: 1.6; border: 1px solid var(--border); }
+  .alert-info { background: rgba(3, 199, 90, 0.06); border-color: rgba(3, 199, 90, 0.15); color: #a3e2be; }
+  .alert-warn { background: rgba(255, 107, 53, 0.06); border-color: rgba(255, 107, 53, 0.15); color: #ffaa85; }
+
+  /* ══════════════════════════════════════════
+     프로세스 카드 리스트 (STEP 가이드)
+  ══════════════════════════════════════════ */
+  .step-list { margin: 20px 0; }
+  .step-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 14px; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--surface2); color: var(--accent); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--font-mono); flex-shrink: 0; }
+  .step-content h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+  .step-content p { font-size: 12px; color: var(--text2); margin-bottom: 0; }
+
+  /* ══════════════════════════════════════════
+     테이블 및 그리드 레이아웃
+  ══════════════════════════════════════════ */
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+  thead { background: var(--surface2); }
+  th { padding: 10px 14px; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(46,50,72,.5); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .card ul { list-style: none; }
+  .card li { margin-bottom: 8px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .card li:last-child { margin-bottom: 0; }
+  .badge { background: var(--surface2); color: var(--accent2); font-family: var(--font-mono); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; }
+  .badge-green { color: var(--accent); }
+
+  /* ══════════════════════════════════════════
+     Q&A 블록 형태
+  ══════════════════════════════════════════ */
+  .qa-block { margin-bottom: 16px; background: var(--surface); border-left: 3px solid var(--accent3); border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 18px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .question { font-weight: 600; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .question::before { content: 'Q.'; color: var(--accent3); font-weight: 700; font-family: var(--font-mono); }
+  .answer { color: var(--text2); font-size: 12px; padding-left: 18px; position: relative; }
+  .answer::before { content: 'A.'; color: var(--accent); font-weight: 700; font-family: var(--font-mono); position: absolute; left: 0; top: 0; }
+
+</style>
+</head>
+<body>
+
+
+<div class="header">
+  <div class="header-logo">🔗</div>
+  <h1>네이버 소재 리스트 생성기 사용 설명서</h1>
+  <span class="header-ver">made by 최아연</span>
+</div>
+
+<div class="container">
+
+  <div class="alert alert-info">
+    <strong>💡 이 툴은 왜 만들어졌는가?</strong><br><br><p class="font-claude-response-body break-words whitespace-normal leading-[1.7]">네이버 검색광고의 소재는 <b>단일형</b>과 <b>반응형</b>으로 구분됩니다. 네이버 광고 정보 일괄 다운로드에서 소재 관련 TSV 파일을 받을 수 있으나, 해당 파일은 가독성이 낮아 소재별 현황을 한눈에 파악하기 어렵습니다.</p>
+<p class="font-claude-response-body break-words whitespace-normal leading-[1.7]">이 툴은 파편화된 TSV 파일들을 한 번에 업로드 하여 결합하고, 성과 보고서 CSV를 소재 ID 기준으로 연결해 광고제목·설명문구별 효율을 직관적으로 비교할 수 있도록 설계되었습니다.</p>
+<p class="font-claude-response-body break-words whitespace-normal leading-[1.7]">상단의 단일형·반응형 버튼, 캠페인·광고그룹·소재 단위의 ON/OFF 필터, 랜딩페이지 URL 간소화 표시, 성과 지표(노출·클릭·비용·전환·ROAS 등) 매핑을 통해 소재 효율 분석부터 대량관리용 CSV 추출까지 하나의 흐름으로 처리할 수 있습니다.</p></div>
+
+  <hr>
+
+  <h2>핵심 사용 프로세스</h2>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>TSV 파일 업로드 (자동 분류 지원)</h4>
+        <p>네이버 광고 정보 일괄 다운로드에서 캠페인, 광고그룹, 소재(단일/반응), 애셋 등 필요 TSV를 다운로드 후 업로드 합니다.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>결합 리스트 확인 및 CSV 다운로드</h4>
+        <p>내부 파싱 엔진이 파일 내부 컬럼 구조를 판별하여 소재 구조를 매핑 후 결합된 원본 소재 베이스 CSV 파일을 생성합니다.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>성과 CSV 업로드 (선택 사항)</h4>
+        <p>네이버 대용량 다운로드 보고서에서 다운로드한 성과 CSV 파일 업로드 시, 소재 ID 기준으로 성과 지표가 매핑됩니다.<br>헤더 시작 행 설정 기능을 지원하므로, 해당 부분을 조정해주세요.&nbsp;</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>최종 완성본 다운로드</h4>
+        <p>소재 리스트 혹은 성과 포함 CSV 버튼을 통해 매핑 결과를 다운로드 할 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>준비물 가이드 (네이버 광고 정보 일괄 다운로드)</h2>
+  <p>원활한 데이터 조인을 위해 네이버 광고관리 시스템 내에서 가공되지 않은 순수 원본 형태의 파일들을 다운로드해 주세요.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>필수 항목</th>
+          <th><br></th>
+          <th>내부 분류 판정 기준 (컬럼 수 방식)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>캠페인 마스터</b></td>
+          <td><br></td>
+          <td>열 개수 <span class="badge">5개</span> 또는 <span class="badge">6개</span> 인 경우 자동 인식</td>
+        </tr>
+        <tr>
+          <td><b>광고그룹 마스터</b></td>
+          <td><br></td>
+          <td>열 개수 <span class="badge">12개</span> 또는 <span class="badge">13개</span> 인 경우 자동 인식</td>
+        </tr>
+        <tr>
+          <td><font color="#ffffff"><b>파워링크 단일형 소재 마스터</b></font></td>
+          <td><br></td>
+          <td>열 개수 <span class="badge">15개</span> 내외 구조 자동 감지</td>
+        </tr>
+        <tr>
+          <td><b>파워링크 반응형 소재 마스터</b></td>
+          <td><br></td>
+          <td>열 개수 <span class="badge">10개</span> 미만의 축소형 컴팩트 레이아웃 구조</td>
+        </tr>
+        <tr>
+          <td><font color="#ffffff"><b>파워링크 애셋 마스터 / 파워링크 반응형 소재연결 마스터</b></font></td>
+          <td><br></td>
+          <td>애셋 ID 조합을 크로스 판독하기 위한 핵심 보조 슬롯</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <h2>내부 데이터 바인딩 매커니즘</h2>
+
+  <h3>💡 자동 매핑 알고리즘 핵심 원리</h3>
+  <p>이 시스템은 사용자가 파일을 어떤 칸에 올려야 할지 고민하는 리소스를 제로로 만들기 위해 <b>행 단위 컬럼 스캔 프로토콜</b>을 베이스로 작동합니다.<br>파일이 인풋되면, 툴 내부 파서가 첫 번째 라인의 탭 공백 기준 토큰 분할을 시도하여 <b>전체 열(Column)의 개수</b>를 체크합니다.<br>체크된 컬럼 넘버와 헤더 필드의 텍스트 성격(예: <code>캠페인ID</code>, <code>광고그룹ID</code>, <code>소재ID</code> 등 필수 매칭 노드 키값)을 상호 대조하여 각 슬롯 레이어에 데이터를 자동으로 탑재합니다.</p>
+
+  <h3>🔗 다차원 조인(Join) 프로세스</h3>
+  <p>업로드 완료 후 <b>[소재 리스트 생성]</b> 버튼을 누르면 내부 메모리 데이터베이스 레이어에서 다음과 같은 연산이 일어납니다.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-weight:600; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:6px;"><span style="color:var(--accent2)">■</span> 파워링크 단일형 소재 연산</div>
+      <p style="font-size:12px; color:var(--text2); margin-bottom:0;">
+        소재 TSV 내부의 <code>광고그룹ID</code>를 조인 키(Join Key)로 삼아 광고그룹 명단과 매칭하여 이름을 뽑아내고, 다시 그 상위의 <code>캠페인ID</code>를 추적해 체인 형태로 결합합니다.
+      </p>
+    </div>
+    <div class="card">
+      <div style="font-weight:600; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:6px;"><span style="color:var(--accent3)">■</span> 파워링크 반응형 소재 연산</div>
+      <p style="font-size:12px; color:var(--text2); margin-bottom:0;">
+        반응형 구조는 텍스트 제목과 설명이 한 파일에 없고 애셋 링크 구조로 분산되어 있습니다. 툴 내부에서 <b>소재 리스트 ↔ 애셋링크 리스트 ↔ 애셋 매스터</b> 3개 테이블을 순차적으로 트리플 조인하여 최종 뷰어 화면에 온전한 텍스트로 치환 복원합니다.</p></div></div>
+
+</div>
+
+
+
+</body>
+</html>

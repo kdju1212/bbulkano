@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>네이버 키워드·쇼핑검색 매핑 &amp; 성과 분석 툴 v4.0 사용설명서</title>
+<style>
+  /* ══════════════════════════════════════════
+     디자인 토큰 (분석 툴과 동일한 스타일 가이드 유지)
+  ══════════════════════════════════════════ */
+  :root {
+    --bg:       #0f1117;
+    --surface:  #1a1d27;
+    --surface2: #222638;
+    --border:   #2e3348;
+    --accent:   #4f8ef7;
+    --accent2:  #7c3aed;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --text:     #e2e8f0;
+    --text2:    #8892a4;
+    --text3:    #4a5568;
+    --radius:   10px;
+    --font: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  }
+
+  /* ══════════════════════════════════════════
+     리셋 & 베이스
+  ══════════════════════════════════════════ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ══════════════════════════════════════════
+     헤더 영역
+  ══════════════════════════════════════════ */
+  .header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-ver { font-size: 12px; color: var(--text2); margin-left: auto; background: var(--surface2); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
+
+  /* ══════════════════════════════════════════
+     레이아웃 & 본문 컨테이너
+  ══════════════════════════════════════════ */
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+  h2 { font-size: 20px; font-weight: 700; margin: 40px 0 16px 0; color: #fff; display: flex; align-items: center; gap: 8px; }
+  h2::before { content: ''; display: inline-block; width: 4px; height: 18px; background: var(--accent); border-radius: 2px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 24px 0 12px 0; color: var(--accent); }
+
+  p { margin-bottom: 16px; color: var(--text); }
+  b { color: #fff; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ══════════════════════════════════════════
+     알림창 스타일 (인라인 배너)
+  ══════════════════════════════════════════ */
+  .alert { border-radius: var(--radius); padding: 16px 20px; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+  .alert-info { background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.2); color: #93b8fa; }
+  .alert-warn { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2); color: #fcd34d; }
+
+  /* ══════════════════════════════════════════
+     프로세스 카드 리스트 (STEP 가이드)
+  ══════════════════════════════════════════ */
+  .step-list { margin: 20px 0; }
+  .step-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 16px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .step-content h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+  .step-content p { font-size: 13px; color: var(--text2); margin-bottom: 0; }
+
+  /* ══════════════════════════════════════════
+     테이블 및 그리드 레이아웃
+  ══════════════════════════════════════════ */
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+  thead { background: var(--surface2); }
+  th { padding: 12px 16px; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); }
+  td { padding: 12px 16px; border-bottom: 1px solid rgba(46,51,72,.5); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .card ul { list-style: none; }
+  .card li { margin-bottom: 8px; font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .card li:last-child { margin-bottom: 0; }
+  .badge { background: var(--surface2); color: var(--accent); font-family: monospace; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 12px; }
+
+  /* ══════════════════════════════════════════
+     Q&A (자주 묻는 질문) 블록 형태
+  ══════════════════════════════════════════ */
+  .qa-block { margin-bottom: 20px; background: var(--surface); border-left: 4px solid var(--accent2); border-radius: 0 var(--radius) var(--radius) 0; padding: 16px 20px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .question { font-weight: 600; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .question::before { content: 'Q.'; color: var(--accent2); font-weight: 800; }
+  .answer { color: var(--text2); font-size: 13px; padding-left: 20px; position: relative; }
+  .answer::before { content: 'A.'; color: var(--green); font-weight: 800; position: absolute; left: 0; top: 0; }
+
+</style>
+</head>
+<body>
+
+
+
+<div class="header">
+  <div class="header-logo">📖</div>
+  <h1>네이버 파워링크 · 쇼핑검색 입찰가 대량관리 사용설명서</h1>
+  <span class="header-ver">made by 박성빈</span>
+</div>
+
+<div class="container">
+
+  <div class="alert alert-info">
+    <strong>💡 <b>이 툴의 목적</b> </strong><br><br>
+    네이버 검색광고의 대량 관리(등록 및 입찰가 수정)는 <b>키워드 ID / 상품 ID</b>와 같은 고유 식별자가 필수적입니다.  <br>
+그러나 네이버 다차원 보고서(CSV)에는 성과 숫자만 있을 뿐 고유 식별자 정보가 누락되어 있습니다.<br><br>
+    이 툴은 <b>네이버 다차원 보고서(CSV)</b>와 대량관리에 필요한&nbsp;<b>네이버 대용량 다운로드(광고 정보 일괄, TSV 4종)</b>를 결합(매핑)합니다.<br>
+이를 통해 하나의 시트에 성과와 고유 ID, 현재 입찰가를 모아 대량관리의 편의성을 높이는 것을 목적으로 합니다.<br></div>
+
+  <div class="alert alert-warn">
+    ⚠️ <b>필독 사항</b> <br>이 툴은 <b>TSV 파일 업로드를 전제로 동작</b>합니다.<br>
+TSV 없이 성과 CSV 보고서만 단독으로 업로드할 경우 고유 ID가 매핑되지 않아 단순 리포트 뷰어 역할에 그치게 됩니다.<br>
+원활한 대량 관리를 위해 TSV 파일을 반드시 함께 준비해 주시기 바랍니다.
+  </div>
+
+  <hr>
+
+  <h2>핵심 프로세스 요약</h2>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>성과 CSV 업로드</h4>
+        <p>네이버 다차원 보고서에서 다운로드한 성과 CSV 파일을 업로드하면, 자동으로 해당 열을 매핑 합니다.<br>이 툴은 헤더 시작 행 설정 기능을 지원합니다.<br>- 네이버 다차원 보고서의 경우 헤더가 2행부터 시작하기에, 아래 헤더를 2로 수정 후 재파싱 진행이 필요합니다.<br></p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>TSV 업로드 (ID 매핑)</h4>
+        <p>캠페인, 광고그룹, 키워드, 쇼핑검색 TSV 파일을 한 번에 업로드 할 수 있습니다.<br> 파일 내부 고유 접두사를 기준으로 자동 분류 및 병합이 진행됩니다.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>기간 A / B 설정</h4>
+        <p>성과 추이를 추적 및 대조하기 위해 성과 측정의 핵심 기준이 될 기준 기간(A)과 대조할 이전 비교 기간(B)을 지정하고 분석을 실행합니다.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>분석 결과 확인 &amp; 다운로드</h4>
+        <p>파워링크, 쇼핑검색, 브랜드검색 탭 필터를 지원하며, 원하는 데이터의 핵심 지표만 CSV 파일로 다운 받을 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>준비물 가이드 (네이버 보고서)</h2>
+  <p>네이버 광고주센터의 다차원 보고서(CSV) 및 대용량 다운로드 보고서(TSV)에서 아래 가지 포맷 다운로드.</p>
+  <ul>
+    <b>(1) 성과 CSV</b><ul>- [일별], [캠페인 유형], [캠페인], [광고그룹], [키워드], [소재]</ul><ul>- [노출수], [클릭수], [총비용], [평균노출순위], [구매완료 전환수], [구매완료 전환매출액]</ul>
+    <b><br>(2) TSV 파일 4종:</b> [캠페인 마스터], [광고그룹 마스터], [등록 키워드 마스터], [쇼핑검색 쇼핑몰상품형 상품 마스터]
+  </ul>
+  <p style="margin-top: 10px; font-size: 13px; color: var(--text2);">※ 인코딩은 네이버 다운로드 표준인 <b>UTF-8</b> 방식을 가장 안정적으로 권장</p>
+
+  <hr>
+
+  <h2>핵심 동작 메커니즘 및 백엔드 원리</h2>
+
+  <h3>[3-1] 성과 CSV 컬럼 자동 감지 규칙 (STEP 1)</h3>
+  <p>시스템은 사용자의 수동 매핑 리소스를 단축하기 위해 각 타겟 역할에 대응하는 <b>힌트 키워드 매칭 테이블</b>을 내장하고 있습니다. 헤더 문자열 분석 시 영문 대소문자 판별 유무 및 공백 제거 처리를 일차적으로 거친 후 비교를 수행합니다.<br>(사람이 일일이 "이 열은 뭐다"라고 알려주지 않아도 되게, 이 툴은 미리 정해둔 단어 목록으로 열 제목을 비교하여 매칭합니다. 대문자·소문자나 띄어쓰기는 신경 쓰지 않고 비교합니다.)</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>타겟 역할</th>
+          <th>동작 방식</th>
+          <th>자동 감지 매칭 힌트 목록</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>캠페인명</b></td>
+          <td><span style="color:var(--red)">완전 일치만 인정</span></td>
+          <td><span class="badge">캠페인명</span>, <span class="badge">캠페인</span> <span style="font-size:11px;color:var(--text3);">(※ 캠페인 유형 등 타 열 오인 매핑 차단용)</span></td>
+        </tr>
+        <tr>
+          <td><b>날짜 (필수)</b></td>
+          <td>부분 일치 허용</td>
+          <td>날짜, 일자, date, 기준일, 일별</td>
+        </tr>
+        <tr>
+          <td><b>광고그룹명</b></td>
+          <td>부분 일치 허용</td>
+          <td>광고그룹명, 광고그룹, adgroup</td>
+        </tr>
+        <tr>
+          <td><b>소재명</b></td>
+          <td>부분 일치 허용</td>
+          <td>소재명, 소재, 광고소재, 상품명, 제목, title, ad_name, 소재제목</td>
+        </tr>
+        <tr>
+          <td><b>키워드</b></td>
+          <td>부분 일치 허용</td>
+          <td>키워드, keyword, 검색어, 키워드텍스트</td>
+        </tr>
+        <tr>
+          <td><b>비용 / 매출액</b></td>
+          <td>부분 일치 허용</td>
+          <td>비용, 총비용, cost, 소진, 광고비 / 매출액, 매출, revenue, 전환매출액</td>
+        </tr>
+        <tr>
+          <td><b>노출·클릭·전환·순위</b></td>
+          <td>부분 일치 허용</td>
+          <td>노출수, 클릭수, 전환수, 평균노출순위 등 표준 네이버 지표 힌트</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>[3-2] TSV 고유 ID 접두사를 이용한 정밀 분류 체계 (STEP 2)</h3>
+  <p>업로드된 다중 TSV 파일들은 정해진 슬롯 순서에 맞춰서 정확하게 하나씩 올릴 필요가 없습니다. 툴 내부 파서가 파일 내부 <b>두 번째 행 데이터의 식별자 접두사(ID Prefix)</b> 및 열 인덱스 체계를 직접 스캔하여 자동으로 올바른 성격의 데이터 셋 레이어로 정렬시킵니다.<br>(두번째 행을 보고 자동으로 분류합니다)</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-weight:600; color:#fff; margin-bottom:12px;">🔍 접두사별 매핑 기준 분류 구조</div>
+      <ul>
+        <li><span class="badge">cmp-</span> 감지 시 ➔ <b>캠페인 명단</b> 자동 귀속</li>
+        <li><span class="badge">grp-</span> &amp; <span class="badge">cmp-</span> ➔ <b>광고그룹 명단</b> 자동 귀속</li>
+        <li><span class="badge">grp-</span> &amp; <span class="badge">nkw-</span> ➔ <b>파워링크 키워드</b> 연동</li>
+        <li><span class="badge">grp-</span> &amp; <span class="badge">nad-</span> ➔ <b>쇼핑검색 소재</b> 연동</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div style="font-weight:600; color:#fff; margin-bottom:12px;">🔗 결합 연산 가이드라인</div>
+      <p style="font-size:13px; color:var(--text2); margin-bottom:0;">
+        캠페인과 광고그룹 TSV는 데이터 스키마의 뼈대 역할을 수행하므로 <b>반드시 업로드</b>되어야 작동합니다. 키워드 및 쇼핑검색 리스트는 필요에 따라 선택적으로 동작하며, 누락 시 해당 탭의 결과 리포트 생성이 예외처리 됩니다.
+      </p>
+    </div>
+  </div>
+
+  <h3>[3-3] 기간 분할 합산 및 파생 지표 수식 처리 (STEP 3 &amp; 4)</h3><h3><b style="font-size: 14px;">일자별 로우 데이터 집계의 필수성</b><span style="color: rgb(226, 232, 240); font-size: 14px;">&nbsp;<br>- 타겟 성과 데이터는 반드시 날짜별로 행이 쪼개져 있는 </span><b style="font-size: 14px;">일자별 원본 데이터 형태</b><span style="font-size: 14px;"><font color="#e2e8f0">여야 합니다.&nbsp;<br></font></span><b style="font-size: 14px;"><br>평균노출순위 정제 처리 프로세스&nbsp;&nbsp;<br></b><span style="color: rgb(226, 232, 240); font-size: 14px;">- 리포트 결과창에 생성되는 순위 지표는 단순 산술 누적 데이터가 아닙니다. (그냥 다 더해서 나누는 것이 아닙니다.)<br></span><span style="color: rgb(226, 232, 240); font-size: 14px;">- 노출이 아예 발생하지 않아 네이버 측정 알고리즘 상 </span><b style="font-size: 14px;">순위가 0 또는 공백 처리된 일자는 사전에 배제</b><span style="color: rgb(226, 232, 240); font-size: 14px;">됩니다. <br>- 오직 데이터가 실존하는 운영 기간만을 대상으로 산출한 </span><b style="font-size: 14px;">일자별 단순 평균값</b><span style="color: rgb(226, 232, 240); font-size: 14px;">입니다. (</span><span style="font-size: 14px; color: rgb(226, 232, 240);">실제로 광고가 보여진 날짜만 가지고 평균을 냅니다.)</span></h3>
+
+  <hr>
+
+  <h2>결과 해석 및 대량 수정 시트 활용법</h2>
+
+  <h3>📂 광고 유형 판정 기준 (유형 코드 피팅)</h3>
+  <p>광고 그룹 내 포함된 원본 메타 정보의 광고그룹 유형 코드(AdGroup Type Code) 정보를 하드코딩 추적합니다.</p>
+  <p style="font-size:13px; color:var(--text2);">
+    • <b>유형 코드 [1]:</b> 파워링크 ➔ 키워드ID 기반의 테이블 필터 매핑 바인딩<br>
+    • <b>유형 코드 [2]:</b> 쇼핑검색 ➔ 소재ID 및 실 상품 단가 기반 테이블 필터 매핑 바인딩<br>
+    • <b>유형 코드 [5]:</b> 브랜드검색 ➔ 키워드 지표 기반 매핑 바인딩<br>
+    • <b>그 외 유형 및 미매핑 그룹:</b> 기타군 처리 (전체 리스트 외 필터 뷰포트에서 제외되어 데이터 오염을 자동 차단)
+  </p>
+
+  <h3>✍️ "수정할 금액" 빈 열 레이아웃 배치 목적</h3>
+  <p> 최종 출력 다운로드 파일 내 포함되어 있는 '수정할 금액' 열은 툴 내부에서 연산되는 계산식이 아니며 의도적으로 <b>비어있는 상태로 컴파일</b>됩니다.<br>
+보고서 내 각종 정보를 토대로 적절한 수정 입찰가를 기입 후, 네이버에 대량등록을 진행하도록 설계된 빈 열입니다.</p>
+
+  <hr>
+
+  <h2>자주 묻는 질문 (FAQ) &amp; 트러블슈팅</h2>
+
+  <div class="qa-block">
+    <div class="question">분석을 구동했는데 특정 캠페인의 결과 데이터가 리포트에 표기되지 않습니다.</div>
+    <div class="answer"><b>광고그룹 TSV 파일 누락 여부</b>를 전수 조사하십시오. 광고그룹 정보가 있어야 광고 종류를 제대로 구분할 수 있어서, 이 파일이 없으면 전부 '기타'로 들어가 버려요.</div>
+  </div>
+
+  <div class="qa-block">
+    <div class="question">결과 화면에서 한글 텍스트 레이블이 심하게 깨져서 표기됩니다.</div>
+    <div class="answer"><b>로컬 인코딩 프로토콜의 왜곡 현상, 쉽게 말해&nbsp;</b><font color="#ffffff"><b>글자 방식(인코딩)이 바뀌어서 그렇습니다.</b></font>&nbsp;다운로드한 파일을 마이크로소프트 엑셀로 열어서 저장하면, 엑셀이 UTF-8 방식을 망가뜨릴 수 있어요. 네이버에서 받은 파일 그대로, 손대지 말고 바로 올려주세요.</div>
+  </div>
+
+  <div class="qa-block">
+    <div class="question">순위 지표 컬럼 데이터가 특정 행에서 하이픈(–) 기호로 출력됩니다.</div>
+    <div class="answer">해당 타겟 키워드 및 소재가 지정된 분석 대상 기간 스케줄 내에서 <b>노출 수 지표 자체를 한 번도 확보하지 못한 케이스</b>입니다. 데이터가 아예 없어서 그렇게 표시되는 거니까 걱정 안 해도 됩니다.</div>
+  </div>
+
+  <div class="qa-block">
+    <div class="question">'전체' 선택 필터 탭으로 열람 시 필터 지표 항목이 빈약합니다.</div>
+    <div class="answer">부러 그렇게 만든 거예요. 파워링크랑 쇼핑검색은 정보 구조가 서로 달라서 한 표에 다 담을 수가 없습니다. 그래서 공통으로 있는 숫자만 보여줍니다. 공통 분모가 되는 핵심 공통 수치 지표 위주로 요약 표기되니, 세부 입찰 조정을 수행하실 때에는 상단 <b>유형별 전용 토글 탭을 명확히 선택</b>한 뒤 조치하시기 바랍니다.</div>
+  </div>
+
+</div>
+
+
+
+
+
+</body>
+</html>

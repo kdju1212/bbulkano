@@ -670,7 +670,17 @@ export function NaverCreativeList() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold">소재 리스트화</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold">소재 리스트화</h1>
+            <a
+              href="/guides/naver-creative-list-guide.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+            >
+              📖 사용설명서
+            </a>
+          </div>
           <p className="text-sm text-zinc-500">
             네이버 대량관리 → 광고 정보 일괄 다운로드 TSV를 업로드하면 캠페인·광고그룹·소재를 조인해 리스트로
             만들어줍니다.

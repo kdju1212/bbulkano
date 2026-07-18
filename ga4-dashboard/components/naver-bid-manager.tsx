@@ -489,7 +489,17 @@ export function NaverBidManager() {
     <div className="space-y-2">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold">입찰가 대량관리 — 키워드 매핑 & 성과 분석</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold">입찰가 대량관리 — 키워드 매핑 & 성과 분석</h1>
+            <a
+              href="/guides/naver-bid-manager-guide.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+            >
+              📖 사용설명서
+            </a>
+          </div>
           <p className="text-sm text-zinc-500">
             성과 CSV와 TSV를 조인해 기간 A(기준) vs B(비교) 성과를 비교합니다. 입찰가를 자동으로 바꾸지는
             않고, &ldquo;수정할 금액&rdquo; 열을 직접 채운 CSV를 네이버 대량 편집기에 올리는 용도입니다.
