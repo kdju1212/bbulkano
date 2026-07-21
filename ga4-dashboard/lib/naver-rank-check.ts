@@ -1,6 +1,6 @@
 // 파워링크(네이버 검색광고) 실시간 순위 체크
 // 공식 API가 없어 실제 검색결과 HTML을 그때그때 가져와 파싱한다 (저장/이력 없음, 버튼 누를 때만 호출).
-// 광고 하나마다 제목/URL/파비콘 링크에 동일한 r=순위&i=소재ID&u="+함수("도메인")+" 패턴이 반복 등장해
+// 광고 하나마다 제목/URL/파비콘 링크에 동일한 r=순위&i=소재ID&d="+함수("도메인")+" 패턴이 반복 등장해
 // 정규식 하나로 순위·소재ID·도메인을 뽑아낸다. PC는 urlencode(), 모바일은 encodeURIComponent()를 쓴다.
 // 업체명(<span class="site">)은 광고 블록마다 한 번만 나오므로, 각 광고의 첫 r=/i= 등장 위치부터
 // 다음 광고가 시작되기 전까지를 한 블록으로 잘라 그 안에서 찾는다.
@@ -29,7 +29,7 @@ export type RankResult =
   | { status: "error"; message: string };
 
 const AD_PATTERN =
-  /r=(\d+)&amp;i=(nad-[\w-]+)&amp;u=&quot;\+(?:urlencode|encodeURIComponent)\(&quot;([^&]+?)&quot;\)/g;
+  /r=(\d+)&amp;i=(nad-[\w-]+)&amp;d=&quot;\+(?:urlencode|encodeURIComponent)\(&quot;([^&]+?)&quot;\)/g;
 const SITE_NAME_PATTERN = /<span class="site">([^<]*)<\/span>/;
 
 export function extractPowerlinkAds(html: string): PowerlinkAd[] {
