@@ -60,11 +60,11 @@ function hasPowerlinkSection(html: string): boolean {
   return html.includes('id="power_link_body"');
 }
 
-// 네이버가 자동입력방지(캡차)나 접근 차단 페이지를 내려줄 때의 특징을 최대한 넓게 잡는 휴리스틱.
-// 100% 정확할 수 없어 오탐 가능 — 그래도 "그냥 안 나왔음"과는 구분해서 원인 파악에 도움을 준다.
+// 정상 검색결과 페이지는 수십만 자 크기의 완전한 HTML이고, 차단/캡차 페이지는 보통 훨씬 작은 안내
+// 페이지 하나뿐이다. 페이지 안에 등장하는 특정 단어로 판단하면 정상 페이지 어딘가(광고 스크립트 등)에
+// 우연히 같은 단어가 섞여 있을 때 오탐이 나므로, 크기·기본 구조만으로 판단한다.
 function looksBlocked(html: string): boolean {
   if (html.length < 10000) return true;
-  if (/자동\s*입력\s*방지|비정상적인\s*접근|captcha|보안\s*문자/i.test(html)) return true;
   if (!/<title[ >]/i.test(html)) return true;
   return false;
 }
