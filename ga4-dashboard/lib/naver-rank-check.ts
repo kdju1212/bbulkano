@@ -22,8 +22,8 @@ export type BlockDebug = {
 
 export type RankResult =
   | { status: "found"; rank: number; adId: string }
-  | { status: "not_found_no_more" } // 파워링크 전부 확인했지만 없음 (더보기도 없음 → 노출 안 됨이 확실)
-  | { status: "not_found_has_more" } // 앞쪽엔 없지만 "더보기"가 있어 더 아래 순위일 수 있음
+  | { status: "not_found_no_more"; debug?: PowerlinkAd[] } // 파워링크 전부 확인했지만 없음 (더보기도 없음 → 노출 안 됨이 확실)
+  | { status: "not_found_has_more"; debug?: PowerlinkAd[] } // 앞쪽엔 없지만 "더보기"가 있어 더 아래 순위일 수 있음
   | { status: "no_powerlink" } // 이 키워드엔 파워링크 영역 자체가 없음
   | { status: "blocked"; debug?: BlockDebug } // 차단/비정상 응답으로 추정
   | { status: "error"; message: string };
@@ -109,7 +109,9 @@ export function judgeRank(html: string, advertiser: string, httpStatus = 200): R
   if (hit) {
     return { status: "found", rank: hit.rank, adId: hit.adId };
   }
-  return hasMoreLink(html) ? { status: "not_found_has_more" } : { status: "not_found_no_more" };
+  return hasMoreLink(html)
+    ? { status: "not_found_has_more", debug: ads }
+    : { status: "not_found_no_more", debug: ads };
 }
 
 const PC_USER_AGENT =
