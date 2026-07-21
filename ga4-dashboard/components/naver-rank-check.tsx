@@ -54,6 +54,19 @@ function ResultCell({ result }: { result: RankResult | undefined }) {
         ? "text-amber-500"
         : "text-zinc-400";
   const label = result.status === "error" ? result.message : RANK_STATUS_LABEL[result.status];
+
+  if (result.status === "blocked" && result.debug) {
+    const { httpStatus, length, snippet } = result.debug;
+    return (
+      <details className="text-xs">
+        <summary className={`cursor-pointer ${color}`}>{label}</summary>
+        <div className="mt-1 max-w-xs rounded bg-zinc-100 p-2 font-mono text-[10px] text-zinc-500 dark:bg-zinc-800">
+          <div>HTTP {httpStatus} · {length.toLocaleString()}자</div>
+          <div className="mt-1 break-all">{snippet || "(응답 본문 없음)"}</div>
+        </div>
+      </details>
+    );
+  }
   return <span className={`text-xs ${color}`}>{label}</span>;
 }
 

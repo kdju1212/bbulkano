@@ -14,12 +14,18 @@ export type PowerlinkAd = {
   name: string;
 };
 
+export type BlockDebug = {
+  httpStatus: number;
+  length: number;
+  snippet: string;
+};
+
 export type RankResult =
   | { status: "found"; rank: number; adId: string }
   | { status: "not_found_no_more" } // 파워링크 전부 확인했지만 없음 (더보기도 없음 → 노출 안 됨이 확실)
   | { status: "not_found_has_more" } // 앞쪽엔 없지만 "더보기"가 있어 더 아래 순위일 수 있음
   | { status: "no_powerlink" } // 이 키워드엔 파워링크 영역 자체가 없음
-  | { status: "blocked" } // 차단/비정상 응답으로 추정
+  | { status: "blocked"; debug?: BlockDebug } // 차단/비정상 응답으로 추정
   | { status: "error"; message: string };
 
 const AD_PATTERN =
@@ -59,8 +65,16 @@ function hasPowerlinkSection(html: string): boolean {
 function looksBlocked(html: string): boolean {
   if (html.length < 10000) return true;
   if (/자동\s*입력\s*방지|비정상적인\s*접근|captcha|보안\s*문자/i.test(html)) return true;
-  if (!/<title>/i.test(html)) return true;
+  if (!/<title[ >]/i.test(html)) return true;
   return false;
+}
+
+function makeBlockDebug(httpStatus: number, html: string): BlockDebug {
+  return {
+    httpStatus,
+    length: html.length,
+    snippet: html.replace(/\s+/g, " ").trim().slice(0, 300),
+  };
 }
 
 export function normalizeDomain(raw: string): string {
@@ -78,9 +92,9 @@ export function normalizeName(raw: string): string {
 
 // 업체명(예: "도시락eSIM")으로 매칭하되, 도메인 형태로 입력해도(예: "dosirakesim.com") 동작하도록
 // 이름·도메인 둘 다 비교한다.
-export function judgeRank(html: string, advertiser: string): RankResult {
-  if (looksBlocked(html)) {
-    return { status: "blocked" };
+export function judgeRank(html: string, advertiser: string, httpStatus = 200): RankResult {
+  if (httpStatus < 200 || httpStatus >= 300 || looksBlocked(html)) {
+    return { status: "blocked", debug: makeBlockDebug(httpStatus, html) };
   }
   if (!hasPowerlinkSection(html)) {
     return { status: "no_powerlink" };
@@ -103,7 +117,7 @@ const PC_USER_AGENT =
 const MOBILE_USER_AGENT =
   "Mozilla/5.0 (Linux; Android 14; SM-S911N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
 
-export async function fetchNaverSearchHtml(keyword: string, device: Device): Promise<string> {
+export async function fetchNaverSearchHtml(keyword: string, device: Device): Promise<{ html: string; status: number }> {
   const host = device === "mobile" ? "m.search.naver.com" : "search.naver.com";
   const url = `https://${host}/search.naver?query=${encodeURIComponent(keyword)}`;
   const res = await fetch(url, {
@@ -113,16 +127,14 @@ export async function fetchNaverSearchHtml(keyword: string, device: Device): Pro
     },
     cache: "no-store",
   });
-  if (!res.ok) {
-    throw new Error(`네이버 응답 오류 (HTTP ${res.status})`);
-  }
-  return res.text();
+  // 403/429 등 차단성 상태코드도 본문을 받아 judgeRank에서 진단 정보로 남긴다 (여기서 던지지 않음).
+  return { html: await res.text(), status: res.status };
 }
 
 export async function checkPowerlinkRank(keyword: string, device: Device, advertiser: string): Promise<RankResult> {
   try {
-    const html = await fetchNaverSearchHtml(keyword, device);
-    return judgeRank(html, advertiser);
+    const { html, status } = await fetchNaverSearchHtml(keyword, device);
+    return judgeRank(html, advertiser, status);
   } catch (e) {
     return { status: "error", message: e instanceof Error ? e.message : String(e) };
   }
