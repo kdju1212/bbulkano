@@ -33,14 +33,26 @@ export type RankResult =
   | { status: "blocked"; debug?: BlockDebug } // 차단/비정상 응답으로 추정
   | { status: "error"; message: string };
 
-const AD_PATTERN =
-  /r=(\d+)&amp;i=(nad-[\w-]+)&amp;d=&quot;\+(?:urlencode|encodeURIComponent)\(&quot;([^&]+?)&quot;\)/g;
+// onclick 속성이 큰따옴표로 감싸져 있으면 안의 "는 &quot;로, &는 &amp;로 이스케이프되지만,
+// (실제로 확인해보니) 네이버는 onclick='...' 처럼 작은따옴표로 감싸는 경우가 많아 안쪽의 "와 &가
+// 그대로(비이스케이프) 나온다. 두 경우를 다 커버하기 위해 매칭 전에 흔한 엔티티를 원문자로 풀어준다.
+function decodeCommonEntities(html: string): string {
+  return html
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x3D;/gi, "=")
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+const AD_PATTERN = /r=(\d+)&i=(nad-[\w-]+)&d="\+(?:urlencode|encodeURIComponent)\("([^&"]+?)"\)/g;
 // 업체명은 PC에서 <a class="site">, 모바일에서 <span class="site">로 태그가 다르므로 태그 종류에 상관없이 잡는다.
 const SITE_NAME_PATTERN = /class="site"[^>]*>([^<]*)</;
 
 export function extractPowerlinkAds(html: string): PowerlinkAd[] {
+  const decoded = decodeCommonEntities(html);
   const firstByRank = new Map<number, { adId: string; domain: string; index: number }>();
-  for (const m of html.matchAll(AD_PATTERN)) {
+  for (const m of decoded.matchAll(AD_PATTERN)) {
     const rank = Number(m[1]);
     if (!firstByRank.has(rank) && m.index !== undefined) {
       firstByRank.set(rank, { adId: m[2], domain: m[3], index: m.index });
@@ -49,8 +61,8 @@ export function extractPowerlinkAds(html: string): PowerlinkAd[] {
 
   const entries = [...firstByRank.entries()].sort((a, b) => a[1].index - b[1].index);
   const ads: PowerlinkAd[] = entries.map(([rank, info], i) => {
-    const blockEnd = i + 1 < entries.length ? entries[i + 1][1].index : html.length;
-    const block = html.slice(info.index, blockEnd);
+    const blockEnd = i + 1 < entries.length ? entries[i + 1][1].index : decoded.length;
+    const block = decoded.slice(info.index, blockEnd);
     const nameMatch = block.match(SITE_NAME_PATTERN);
     return { rank, adId: info.adId, domain: info.domain, name: nameMatch ? nameMatch[1].trim() : "" };
   });
