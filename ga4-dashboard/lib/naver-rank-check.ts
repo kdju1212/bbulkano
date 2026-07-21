@@ -35,7 +35,8 @@ export type RankResult =
 
 const AD_PATTERN =
   /r=(\d+)&amp;i=(nad-[\w-]+)&amp;d=&quot;\+(?:urlencode|encodeURIComponent)\(&quot;([^&]+?)&quot;\)/g;
-const SITE_NAME_PATTERN = /<span class="site">([^<]*)<\/span>/;
+// 업체명은 PC에서 <a class="site">, 모바일에서 <span class="site">로 태그가 다르므로 태그 종류에 상관없이 잡는다.
+const SITE_NAME_PATTERN = /class="site"[^>]*>([^<]*)</;
 
 export function extractPowerlinkAds(html: string): PowerlinkAd[] {
   const firstByRank = new Map<number, { adId: string; domain: string; index: number }>();
