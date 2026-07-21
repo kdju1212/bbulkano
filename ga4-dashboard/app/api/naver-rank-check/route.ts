@@ -16,12 +16,12 @@ export async function POST(request: Request): Promise<NextResponse> {
   const body = await request.json().catch(() => null);
   const keyword = typeof body?.keyword === "string" ? body.keyword.trim() : "";
   const device: Device = body?.device === "mobile" ? "mobile" : "pc";
-  const matchDomain = typeof body?.matchDomain === "string" ? body.matchDomain.trim() : "";
+  const advertiser = typeof body?.advertiser === "string" ? body.advertiser.trim() : "";
 
-  if (!keyword || !matchDomain) {
-    return NextResponse.json({ error: "keyword와 matchDomain은 필수입니다." }, { status: 400 });
+  if (!keyword || !advertiser) {
+    return NextResponse.json({ error: "keyword와 advertiser는 필수입니다." }, { status: 400 });
   }
 
-  const result = await checkPowerlinkRank(keyword, device, matchDomain);
+  const result = await checkPowerlinkRank(keyword, device, advertiser);
   return NextResponse.json({ keyword, device, result });
 }

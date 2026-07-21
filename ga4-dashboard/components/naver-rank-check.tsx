@@ -28,11 +28,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function checkOne(keyword: string, device: "pc" | "mobile", matchDomain: string): Promise<RankResult> {
+async function checkOne(keyword: string, device: "pc" | "mobile", advertiser: string): Promise<RankResult> {
   const res = await fetch("/api/naver-rank-check", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ keyword, device, matchDomain }),
+    body: JSON.stringify({ keyword, device, advertiser }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
@@ -58,7 +58,7 @@ function ResultCell({ result }: { result: RankResult | undefined }) {
 }
 
 export function NaverRankCheck() {
-  const [matchDomain, setMatchDomain] = useState("");
+  const [advertiser, setAdvertiser] = useState("");
   const [keywordText, setKeywordText] = useState("");
   const [rows, setRows] = useState<RowResult[]>([]);
   const [running, setRunning] = useState(false);
@@ -73,7 +73,7 @@ export function NaverRankCheck() {
   const overLimit = keywordText.split("\n").map((k) => k.trim()).filter(Boolean).length > MAX_KEYWORDS;
 
   async function run() {
-    if (!matchDomain.trim() || keywords.length === 0 || running) return;
+    if (!advertiser.trim() || keywords.length === 0 || running) return;
     setRunning(true);
     const initial = keywords.map((keyword) => ({ keyword }));
     setRows(initial);
@@ -83,13 +83,13 @@ export function NaverRankCheck() {
     for (let i = 0; i < keywords.length; i++) {
       const keyword = keywords[i];
 
-      const pc = await checkOne(keyword, "pc", matchDomain.trim());
+      const pc = await checkOne(keyword, "pc", advertiser.trim());
       done += 1;
       setProgress({ done, total: keywords.length * 2 });
       setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, pc } : r)));
       await sleep(randomDelayMs());
 
-      const mobile = await checkOne(keyword, "mobile", matchDomain.trim());
+      const mobile = await checkOne(keyword, "mobile", advertiser.trim());
       done += 1;
       setProgress({ done, total: keywords.length * 2 });
       setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, mobile } : r)));
@@ -110,14 +110,15 @@ export function NaverRankCheck() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              우리 광고 도메인 (예: dosirakesim.com)
+              우리 업체명 (검색결과에 뜨는 이름 그대로, 예: 도시락eSIM)
             </label>
             <input
               className={inputClass}
-              value={matchDomain}
-              onChange={(e) => setMatchDomain(e.target.value)}
-              placeholder="dosirakesim.com"
+              value={advertiser}
+              onChange={(e) => setAdvertiser(e.target.value)}
+              placeholder="도시락eSIM"
             />
+            <span className="text-xs text-zinc-400">도메인(dosirakesim.com)으로 입력해도 인식됩니다</span>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
@@ -138,7 +139,7 @@ export function NaverRankCheck() {
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={run}
-            disabled={running || !matchDomain.trim() || keywords.length === 0}
+            disabled={running || !advertiser.trim() || keywords.length === 0}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
             {running ? `확인 중... (${progress.done}/${progress.total})` : "순위 확인 시작"}

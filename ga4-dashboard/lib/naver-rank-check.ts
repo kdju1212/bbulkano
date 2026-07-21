@@ -2,6 +2,8 @@
 // 공식 API가 없어 실제 검색결과 HTML을 그때그때 가져와 파싱한다 (저장/이력 없음, 버튼 누를 때만 호출).
 // 광고 하나마다 제목/URL/파비콘 링크에 동일한 r=순위&i=소재ID&u="+함수("도메인")+" 패턴이 반복 등장해
 // 정규식 하나로 순위·소재ID·도메인을 뽑아낸다. PC는 urlencode(), 모바일은 encodeURIComponent()를 쓴다.
+// 업체명(<span class="site">)은 광고 블록마다 한 번만 나오므로, 각 광고의 첫 r=/i= 등장 위치부터
+// 다음 광고가 시작되기 전까지를 한 블록으로 잘라 그 안에서 찾는다.
 
 export type Device = "pc" | "mobile";
 
@@ -9,6 +11,7 @@ export type PowerlinkAd = {
   rank: number;
   adId: string;
   domain: string;
+  name: string;
 };
 
 export type RankResult =
@@ -21,16 +24,26 @@ export type RankResult =
 
 const AD_PATTERN =
   /r=(\d+)&amp;i=(nad-[\w-]+)&amp;u=&quot;\+(?:urlencode|encodeURIComponent)\(&quot;([^&]+?)&quot;\)/g;
+const SITE_NAME_PATTERN = /<span class="site">([^<]*)<\/span>/;
 
 export function extractPowerlinkAds(html: string): PowerlinkAd[] {
-  const byRank = new Map<number, PowerlinkAd>();
+  const firstByRank = new Map<number, { adId: string; domain: string; index: number }>();
   for (const m of html.matchAll(AD_PATTERN)) {
     const rank = Number(m[1]);
-    if (!byRank.has(rank)) {
-      byRank.set(rank, { rank, adId: m[2], domain: m[3] });
+    if (!firstByRank.has(rank) && m.index !== undefined) {
+      firstByRank.set(rank, { adId: m[2], domain: m[3], index: m.index });
     }
   }
-  return [...byRank.values()].sort((a, b) => a.rank - b.rank);
+
+  const entries = [...firstByRank.entries()].sort((a, b) => a[1].index - b[1].index);
+  const ads: PowerlinkAd[] = entries.map(([rank, info], i) => {
+    const blockEnd = i + 1 < entries.length ? entries[i + 1][1].index : html.length;
+    const block = html.slice(info.index, blockEnd);
+    const nameMatch = block.match(SITE_NAME_PATTERN);
+    return { rank, adId: info.adId, domain: info.domain, name: nameMatch ? nameMatch[1].trim() : "" };
+  });
+
+  return ads.sort((a, b) => a.rank - b.rank);
 }
 
 function hasMoreLink(html: string): boolean {
@@ -59,7 +72,13 @@ export function normalizeDomain(raw: string): string {
     .toLowerCase();
 }
 
-export function judgeRank(html: string, matchDomain: string): RankResult {
+export function normalizeName(raw: string): string {
+  return raw.trim().replace(/\s+/g, "").toLowerCase();
+}
+
+// 업체명(예: "도시락eSIM")으로 매칭하되, 도메인 형태로 입력해도(예: "dosirakesim.com") 동작하도록
+// 이름·도메인 둘 다 비교한다.
+export function judgeRank(html: string, advertiser: string): RankResult {
   if (looksBlocked(html)) {
     return { status: "blocked" };
   }
@@ -68,8 +87,11 @@ export function judgeRank(html: string, matchDomain: string): RankResult {
   }
 
   const ads = extractPowerlinkAds(html);
-  const target = normalizeDomain(matchDomain);
-  const hit = ads.find((ad) => normalizeDomain(ad.domain) === target);
+  const targetName = normalizeName(advertiser);
+  const targetDomain = normalizeDomain(advertiser);
+  const hit = ads.find(
+    (ad) => (ad.name && normalizeName(ad.name) === targetName) || normalizeDomain(ad.domain) === targetDomain,
+  );
   if (hit) {
     return { status: "found", rank: hit.rank, adId: hit.adId };
   }
@@ -97,10 +119,10 @@ export async function fetchNaverSearchHtml(keyword: string, device: Device): Pro
   return res.text();
 }
 
-export async function checkPowerlinkRank(keyword: string, device: Device, matchDomain: string): Promise<RankResult> {
+export async function checkPowerlinkRank(keyword: string, device: Device, advertiser: string): Promise<RankResult> {
   try {
     const html = await fetchNaverSearchHtml(keyword, device);
-    return judgeRank(html, matchDomain);
+    return judgeRank(html, advertiser);
   } catch (e) {
     return { status: "error", message: e instanceof Error ? e.message : String(e) };
   }
