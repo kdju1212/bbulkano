@@ -20,10 +20,15 @@ export type BlockDebug = {
   snippet: string;
 };
 
+export type NotFoundDebug = {
+  ads: PowerlinkAd[];
+  rawSnippet?: string; // ads가 0개일 때, power_link_body 주변 원문을 그대로 보여줘서 패턴이 왜 안 맞는지 눈으로 확인한다.
+};
+
 export type RankResult =
   | { status: "found"; rank: number; adId: string }
-  | { status: "not_found_no_more"; debug?: PowerlinkAd[] } // 파워링크 전부 확인했지만 없음 (더보기도 없음 → 노출 안 됨이 확실)
-  | { status: "not_found_has_more"; debug?: PowerlinkAd[] } // 앞쪽엔 없지만 "더보기"가 있어 더 아래 순위일 수 있음
+  | { status: "not_found_no_more"; debug?: NotFoundDebug } // 파워링크 전부 확인했지만 없음 (더보기도 없음 → 노출 안 됨이 확실)
+  | { status: "not_found_has_more"; debug?: NotFoundDebug } // 앞쪽엔 없지만 "더보기"가 있어 더 아래 순위일 수 있음
   | { status: "no_powerlink" } // 이 키워드엔 파워링크 영역 자체가 없음
   | { status: "blocked"; debug?: BlockDebug } // 차단/비정상 응답으로 추정
   | { status: "error"; message: string };
@@ -109,9 +114,17 @@ export function judgeRank(html: string, advertiser: string, httpStatus = 200): R
   if (hit) {
     return { status: "found", rank: hit.rank, adId: hit.adId };
   }
+
+  const debug: NotFoundDebug = { ads };
+  if (ads.length === 0) {
+    const anchor = html.indexOf('power_link_body');
+    if (anchor !== -1) {
+      debug.rawSnippet = html.slice(anchor, anchor + 1500);
+    }
+  }
   return hasMoreLink(html)
-    ? { status: "not_found_has_more", debug: ads }
-    : { status: "not_found_no_more", debug: ads };
+    ? { status: "not_found_has_more", debug }
+    : { status: "not_found_no_more", debug };
 }
 
 const PC_USER_AGENT =

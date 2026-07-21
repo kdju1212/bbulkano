@@ -69,14 +69,17 @@ function ResultCell({ result }: { result: RankResult | undefined }) {
   }
 
   if ((result.status === "not_found_has_more" || result.status === "not_found_no_more") && result.debug) {
-    const ads = result.debug;
+    const { ads, rawSnippet } = result.debug;
     return (
       <details className="text-xs">
         <summary className={`cursor-pointer ${color}`}>{label}</summary>
         <div className="mt-1 max-w-xs rounded bg-zinc-100 p-2 font-mono text-[10px] text-zinc-500 dark:bg-zinc-800">
           <div>추출된 광고 {ads.length}개</div>
           {ads.length === 0 ? (
-            <div className="mt-1">(파워링크 영역은 있지만 광고를 하나도 못 뽑음 — 패턴이 안 맞을 수 있음)</div>
+            <>
+              <div className="mt-1">(파워링크 영역은 있지만 광고를 하나도 못 뽑음 — 패턴이 안 맞을 수 있음)</div>
+              {rawSnippet && <div className="mt-1 max-h-40 overflow-y-auto break-all whitespace-pre-wrap">{rawSnippet}</div>}
+            </>
           ) : (
             <ul className="mt-1 space-y-0.5">
               {ads.map((ad) => (
