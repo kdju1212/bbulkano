@@ -2,14 +2,12 @@
 
 // 네이버 관리 — 파워링크 실시간 순위 체크
 // 버튼을 누른 순간에만 네이버 검색결과를 그때그때 가져와 우리 광고 순위를 확인한다 (저장/이력 없음).
-// 키워드 최대 25개 × PC/모바일 = 최대 50회 요청을 클라이언트가 순차적으로, 무작위 지연(1~3초)을 두고 호출한다.
+// 키워드 개수 제한은 없다 — 키워드 수 × PC/모바일만큼 클라이언트가 순차적으로, 무작위 지연(1~3초)을 두고 호출한다.
 // (한 번에 몰아치지 않고 사람이 누르는 속도에 가깝게 흉내내기 위함 — 프록시·캡차 우회 등은 다루지 않는다.)
 
 import { useState } from "react";
 import type { RankResult } from "@/lib/naver-rank-check";
 import { RANK_STATUS_LABEL } from "@/lib/naver-rank-check";
-
-const MAX_KEYWORDS = 25;
 
 type RowResult = {
   keyword: string;
@@ -107,10 +105,7 @@ export function NaverRankCheck() {
   const keywords = keywordText
     .split("\n")
     .map((k) => k.trim())
-    .filter(Boolean)
-    .slice(0, MAX_KEYWORDS);
-
-  const overLimit = keywordText.split("\n").map((k) => k.trim()).filter(Boolean).length > MAX_KEYWORDS;
+    .filter(Boolean);
 
   async function run() {
     if (!advertiser.trim() || keywords.length === 0 || running) return;
@@ -143,8 +138,8 @@ export function NaverRankCheck() {
       <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="mb-1 text-sm font-bold">파워링크 실시간 순위 체크</h2>
         <p className="mb-4 text-xs text-zinc-500">
-          버튼을 누르는 순간 네이버 검색결과를 그때그때 확인합니다. 이력은 저장하지 않습니다. 키워드는 최대{" "}
-          {MAX_KEYWORDS}개, PC·모바일 합쳐 최대 {MAX_KEYWORDS * 2}회 요청이 순차적으로(무작위 지연 포함) 실행됩니다.
+          버튼을 누르는 순간 네이버 검색결과를 그때그때 확인합니다. 이력은 저장하지 않습니다. 키워드 수 × PC·모바일
+          만큼의 요청이 순차적으로(무작위 지연 포함) 실행되니, 키워드가 많을수록 전체 확인 시간이 오래 걸립니다.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -161,18 +156,14 @@ export function NaverRankCheck() {
             <span className="text-xs text-zinc-400">도메인(dosirakesim.com)으로 입력해도 인식됩니다</span>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              키워드 (줄바꿈으로 구분, 최대 {MAX_KEYWORDS}개)
-            </label>
+            <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">키워드 (줄바꿈으로 구분)</label>
             <textarea
               className={`${inputClass} h-24 resize-none`}
               value={keywordText}
               onChange={(e) => setKeywordText(e.target.value)}
               placeholder={"해외유심\n일본 esim\n미국 esim"}
             />
-            <span className={`text-xs ${overLimit ? "text-red-500" : "text-zinc-400"}`}>
-              {keywords.length}/{MAX_KEYWORDS}개 인식됨{overLimit ? ` — ${MAX_KEYWORDS}개까지만 확인합니다` : ""}
-            </span>
+            <span className="text-xs text-zinc-400">{keywords.length}개 인식됨</span>
           </div>
         </div>
 
