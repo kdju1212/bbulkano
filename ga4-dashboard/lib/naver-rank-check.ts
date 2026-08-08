@@ -8,7 +8,8 @@
 export type Device = "pc" | "mobile";
 
 export type PowerlinkAd = {
-  rank: number;
+  rank: number; // 네이버가 HTML에 박아넣은 순위 숫자(r=)
+  positionRank: number; // 문서에 등장한 순서로 센 순위 (독립적인 교차검증용)
   adId: string;
   domain: string;
   name: string;
@@ -26,7 +27,7 @@ export type NotFoundDebug = {
 };
 
 export type RankResult =
-  | { status: "found"; rank: number; adId: string }
+  | { status: "found"; rank: number; positionRank: number; adId: string }
   | { status: "not_found_no_more"; debug?: NotFoundDebug } // 파워링크 전부 확인했지만 없음 (더보기도 없음 → 노출 안 됨이 확실)
   | { status: "not_found_has_more"; debug?: NotFoundDebug } // 앞쪽엔 없지만 "더보기"가 있어 더 아래 순위일 수 있음
   | { status: "no_powerlink" } // 이 키워드엔 파워링크 영역 자체가 없음
@@ -64,7 +65,13 @@ export function extractPowerlinkAds(html: string): PowerlinkAd[] {
     const blockEnd = i + 1 < entries.length ? entries[i + 1][1].index : decoded.length;
     const block = decoded.slice(info.index, blockEnd);
     const nameMatch = block.match(SITE_NAME_PATTERN);
-    return { rank, adId: info.adId, domain: info.domain, name: nameMatch ? nameMatch[1].trim() : "" };
+    return {
+      rank,
+      positionRank: i + 1,
+      adId: info.adId,
+      domain: info.domain,
+      name: nameMatch ? nameMatch[1].trim() : "",
+    };
   });
 
   return ads.sort((a, b) => a.rank - b.rank);
@@ -125,7 +132,7 @@ export function judgeRank(html: string, advertiser: string, httpStatus = 200): R
     (ad) => (ad.name && normalizeName(ad.name) === targetName) || normalizeDomain(ad.domain) === targetDomain,
   );
   if (hit) {
-    return { status: "found", rank: hit.rank, adId: hit.adId };
+    return { status: "found", rank: hit.rank, positionRank: hit.positionRank, adId: hit.adId };
   }
 
   const debug: NotFoundDebug = { ads };
