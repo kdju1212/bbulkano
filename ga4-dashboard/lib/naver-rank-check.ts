@@ -116,7 +116,8 @@ export function normalizeName(raw: string): string {
 }
 
 // 업체명(예: "도시락eSIM")으로 매칭하되, 도메인 형태로 입력해도(예: "dosirakesim.com") 동작하도록
-// 이름·도메인 둘 다 비교한다.
+// 이름·도메인 둘 다 비교한다. 콤마로 여러 개 입력하면(같은 회사가 캠페인마다 다른 이름/도메인을 쓸 때)
+// 그중 하나라도 맞으면 매칭한다.
 export function judgeRank(html: string, advertiser: string, httpStatus = 200): RankResult {
   if (httpStatus < 200 || httpStatus >= 300 || looksBlocked(html)) {
     return { status: "blocked", debug: makeBlockDebug(httpStatus, html) };
@@ -126,10 +127,15 @@ export function judgeRank(html: string, advertiser: string, httpStatus = 200): R
   }
 
   const ads = extractPowerlinkAds(html);
-  const targetName = normalizeName(advertiser);
-  const targetDomain = normalizeDomain(advertiser);
-  const hit = ads.find(
-    (ad) => (ad.name && normalizeName(ad.name) === targetName) || normalizeDomain(ad.domain) === targetDomain,
+  const targets = advertiser
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean)
+    .map((a) => ({ name: normalizeName(a), domain: normalizeDomain(a) }));
+  const hit = ads.find((ad) =>
+    targets.some(
+      (t) => (ad.name && normalizeName(ad.name) === t.name) || normalizeDomain(ad.domain) === t.domain,
+    ),
   );
   if (hit) {
     return { status: "found", rank: hit.rank, positionRank: hit.positionRank, adId: hit.adId };

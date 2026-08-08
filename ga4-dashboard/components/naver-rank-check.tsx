@@ -145,15 +145,15 @@ export function NaverRankCheck() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              우리 업체명 (검색결과에 뜨는 이름 그대로, 예: 도시락eSIM)
+              우리 업체명 (콤마로 여러 개 입력 가능, 예: 도시락eSIM, 와이파이도시락)
             </label>
             <input
               className={inputClass}
               value={advertiser}
               onChange={(e) => setAdvertiser(e.target.value)}
-              placeholder="도시락eSIM"
+              placeholder="도시락eSIM, 와이파이도시락"
             />
-            <span className="text-xs text-zinc-400">도메인(dosirakesim.com)으로 입력해도 인식됩니다</span>
+            <span className="text-xs text-zinc-400">이름/도메인 섞어서 콤마로 입력해도 됩니다</span>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">키워드 (줄바꿈으로 구분)</label>

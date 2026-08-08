@@ -166,27 +166,40 @@ export function NaverRankCheck2() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              우리 업체명 (검색결과에 뜨는 이름 그대로)
+              우리 업체명 (콤마로 여러 개 입력 가능 — 캠페인마다 다른 이름을 쓸 때)
             </label>
             <div className="flex gap-2">
               <input
                 className={`${inputClass} flex-1`}
                 value={advertiser}
                 onChange={(e) => setAdvertiser(e.target.value)}
-                placeholder="도시락eSIM"
+                placeholder="도시락eSIM, 와이파이도시락"
               />
-              {QUICK_ADVERTISERS.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => setAdvertiser(name)}
-                  className="shrink-0 rounded-lg border border-zinc-300 px-3 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  {name}
-                </button>
-              ))}
+              {QUICK_ADVERTISERS.map((name) => {
+                const current = advertiser
+                  .split(",")
+                  .map((a) => a.trim())
+                  .filter(Boolean);
+                const active = current.includes(name);
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() =>
+                      setAdvertiser(active ? current.filter((a) => a !== name).join(", ") : [...current, name].join(", "))
+                    }
+                    className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium ${
+                      active
+                        ? "border-blue-500 bg-blue-50 text-blue-600 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-400"
+                        : "border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    {name}
+                  </button>
+                );
+              })}
             </div>
-            <span className="text-xs text-zinc-400">도메인으로 입력해도 인식됩니다</span>
+            <span className="text-xs text-zinc-400">이름/도메인 섞어서 콤마로 입력해도 됩니다</span>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">키워드 (줄바꿈으로 구분)</label>
