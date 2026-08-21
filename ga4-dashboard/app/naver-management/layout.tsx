@@ -11,6 +11,7 @@ const TABS = [
   { href: "/naver-management/bid-manager", label: "입찰가 대량관리" },
   { href: "/naver-management/rank-check", label: "파워링크 순위 체크" },
   { href: "/naver-management/rank-check-2", label: "파워링크 순위 체크 2" },
+  { href: "/naver-management/shopping-check", label: "쇼핑검색 순위 체크" },
 ];
 
 export default function NaverManagementLayout({ children }: { children: React.ReactNode }) {

@@ -37,7 +37,7 @@ export type RankResult =
 // onclick 속성이 큰따옴표로 감싸져 있으면 안의 "는 &quot;로, &는 &amp;로 이스케이프되지만,
 // (실제로 확인해보니) 네이버는 onclick='...' 처럼 작은따옴표로 감싸는 경우가 많아 안쪽의 "와 &가
 // 그대로(비이스케이프) 나온다. 두 경우를 다 커버하기 위해 매칭 전에 흔한 엔티티를 원문자로 풀어준다.
-function decodeCommonEntities(html: string): string {
+export function decodeCommonEntities(html: string): string {
   return html
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
@@ -88,13 +88,13 @@ function hasPowerlinkSection(html: string): boolean {
 // 정상 검색결과 페이지는 수십만 자 크기의 완전한 HTML이고, 차단/캡차 페이지는 보통 훨씬 작은 안내
 // 페이지 하나뿐이다. 페이지 안에 등장하는 특정 단어로 판단하면 정상 페이지 어딘가(광고 스크립트 등)에
 // 우연히 같은 단어가 섞여 있을 때 오탐이 나므로, 크기·기본 구조만으로 판단한다.
-function looksBlocked(html: string): boolean {
+export function looksBlocked(html: string): boolean {
   if (html.length < 10000) return true;
   if (!/<title[ >]/i.test(html)) return true;
   return false;
 }
 
-function makeBlockDebug(httpStatus: number, html: string): BlockDebug {
+export function makeBlockDebug(httpStatus: number, html: string): BlockDebug {
   return {
     httpStatus,
     length: html.length,
