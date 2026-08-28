@@ -9,7 +9,7 @@ import { useState } from "react";
 import type { RankResult } from "@/lib/naver-rank-check";
 import { RANK_STATUS_LABEL } from "@/lib/naver-rank-check";
 
-const QUICK_ADVERTISERS = ["도시락eSIM", "와이파이도시락"];
+const QUICK_ADVERTISERS = ["도시락eSIM", "와이파이도시락", "도시락USIM"];
 
 type RowResult = {
   keyword: string;
@@ -168,13 +168,13 @@ export function NaverRankCheck2() {
             <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
               우리 업체명 (콤마로 여러 개 입력 가능 — 캠페인마다 다른 이름을 쓸 때)
             </label>
-            <div className="flex gap-2">
-              <input
-                className={`${inputClass} flex-1`}
-                value={advertiser}
-                onChange={(e) => setAdvertiser(e.target.value)}
-                placeholder="도시락eSIM, 와이파이도시락"
-              />
+            <input
+              className={inputClass}
+              value={advertiser}
+              onChange={(e) => setAdvertiser(e.target.value)}
+              placeholder="도시락eSIM, 와이파이도시락"
+            />
+            <div className="flex flex-wrap gap-2">
               {QUICK_ADVERTISERS.map((name) => {
                 const current = advertiser
                   .split(",")
