@@ -7,6 +7,7 @@ export type SheetRow = {
   channel: string; // "매체" 열이 없으면 "타겟"(구매유사/관심사/논타겟 등) 열을 대신 쓴다.
   campaign: string;
   adSet: string; // 캠페인 하위 "세트" 열 (없으면 빈 문자열)
+  creative: string; // 세트 하위 "소재" 열 (없으면 빈 문자열)
   productLine: string; // 캠페인명에 "깔라만시" 포함 여부로 구분 (없으면 "미트소재")
   cost: number;
   clicks: number;
@@ -33,6 +34,7 @@ const HEADER_ALIASES: Record<keyof Omit<SheetRow, "productLine">, string[]> = {
   channel: ["매체", "채널", "channel", "medium", "source", "타겟", "target"],
   campaign: ["캠페인", "campaign"],
   adSet: ["세트", "광고세트", "adset", "ad set", "set"],
+  creative: ["소재", "소재명", "creative", "ad name", "adname"],
   cost: ["광고비", "비용", "cost", "spend", "ad cost", "광고비용"],
   clicks: ["클릭", "클릭수", "click", "clicks"],
   purchases: ["구매", "전환", "구매수", "purchase", "conversion", "conversions"],
@@ -81,6 +83,7 @@ export function parseSheetValues(values: string[][]): SheetRow[] {
     channel: matchColumn(headers, HEADER_ALIASES.channel),
     campaign: matchColumn(headers, HEADER_ALIASES.campaign),
     adSet: matchColumn(headers, HEADER_ALIASES.adSet),
+    creative: matchColumn(headers, HEADER_ALIASES.creative),
     cost: matchColumn(headers, HEADER_ALIASES.cost),
     clicks: matchColumn(headers, HEADER_ALIASES.clicks),
     purchases: matchColumn(headers, HEADER_ALIASES.purchases),
@@ -99,6 +102,7 @@ export function parseSheetValues(values: string[][]): SheetRow[] {
       channel: col.channel >= 0 ? (line[col.channel] ?? "").trim() : "",
       campaign,
       adSet: col.adSet >= 0 ? (line[col.adSet] ?? "").trim() : "",
+      creative: col.creative >= 0 ? (line[col.creative] ?? "").trim() : "",
       productLine: deriveProductLine(campaign),
       cost: parseNumber(col.cost >= 0 ? line[col.cost] : undefined),
       clicks: parseNumber(col.clicks >= 0 ? line[col.clicks] : undefined),
@@ -145,6 +149,7 @@ export type DashboardFilters = {
   channels?: string[];
   campaigns?: string[];
   adSets?: string[];
+  creatives?: string[];
   productLines?: string[];
 };
 
@@ -155,6 +160,7 @@ export function applyFilters(rows: SheetRow[], filters: DashboardFilters): Sheet
     if (filters.channels?.length && !filters.channels.includes(r.channel)) return false;
     if (filters.campaigns?.length && !filters.campaigns.includes(r.campaign)) return false;
     if (filters.adSets?.length && !filters.adSets.includes(r.adSet)) return false;
+    if (filters.creatives?.length && !filters.creatives.includes(r.creative)) return false;
     if (filters.productLines?.length && !filters.productLines.includes(r.productLine)) return false;
     return true;
   });
@@ -238,6 +244,42 @@ export function groupByChannel(rows: SheetRow[]): ChannelMetric[] {
     .map(([channel, v]) => ({ channel, cost: v.cost, revenue: v.revenue }));
 }
 
-export function uniqueValues(rows: SheetRow[], key: "channel" | "campaign" | "adSet" | "productLine"): string[] {
+export function uniqueValues(
+  rows: SheetRow[],
+  key: "channel" | "campaign" | "adSet" | "creative" | "productLine",
+): string[] {
   return [...new Set(rows.map((r) => r[key]).filter(Boolean))].sort();
+}
+
+export type CreativeMetric = {
+  creative: string;
+  cost: number;
+  revenue: number;
+  clicks: number;
+  purchases: number;
+  roas: number | null;
+};
+
+// 소재는 개수가 많을 수 있어 차트보다 표(사용자가 정렬해서 훑어보는 용도)에 더 맞는다 — 광고비 큰 순으로 정렬.
+export function groupByCreative(rows: SheetRow[]): CreativeMetric[] {
+  const byCreative = new Map<string, { cost: number; revenue: number; clicks: number; purchases: number }>();
+  for (const r of rows) {
+    const key = r.creative || "(미지정)";
+    const cur = byCreative.get(key) ?? { cost: 0, revenue: 0, clicks: 0, purchases: 0 };
+    cur.cost += r.cost;
+    cur.revenue += r.revenue;
+    cur.clicks += r.clicks;
+    cur.purchases += r.purchases;
+    byCreative.set(key, cur);
+  }
+  return [...byCreative.entries()]
+    .sort(([, a], [, b]) => b.cost - a.cost)
+    .map(([creative, v]) => ({
+      creative,
+      cost: v.cost,
+      revenue: v.revenue,
+      clicks: v.clicks,
+      purchases: v.purchases,
+      roas: v.cost > 0 ? (v.revenue / v.cost) * 100 : null,
+    }));
 }

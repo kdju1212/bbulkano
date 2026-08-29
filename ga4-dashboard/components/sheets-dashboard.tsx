@@ -10,6 +10,7 @@ import {
   applyFilters,
   dateRange,
   groupByChannel,
+  groupByCreative,
   groupByDate,
   summarize,
   uniqueValues,
@@ -37,6 +38,7 @@ export function SheetsDashboard() {
   const [channel, setChannel] = useState("");
   const [campaign, setCampaign] = useState("");
   const [adSet, setAdSet] = useState("");
+  const [creative, setCreative] = useState("");
   const [productLine, setProductLine] = useState("");
   const [dateTouched, setDateTouched] = useState(false);
 
@@ -82,17 +84,20 @@ export function SheetsDashboard() {
         channels: channel ? [channel] : undefined,
         campaigns: campaign ? [campaign] : undefined,
         adSets: adSet ? [adSet] : undefined,
+        creatives: creative ? [creative] : undefined,
         productLines: productLine ? [productLine] : undefined,
       }),
-    [rows, startDate, endDate, channel, campaign, adSet, productLine],
+    [rows, startDate, endDate, channel, campaign, adSet, creative, productLine],
   );
 
   const summary = useMemo(() => summarize(filtered), [filtered]);
   const daily = useMemo(() => groupByDate(filtered), [filtered]);
   const byChannel = useMemo(() => groupByChannel(filtered), [filtered]);
+  const byCreative = useMemo(() => groupByCreative(filtered), [filtered]);
   const channels = useMemo(() => uniqueValues(rows, "channel"), [rows]);
   const campaigns = useMemo(() => uniqueValues(rows, "campaign"), [rows]);
   const adSets = useMemo(() => uniqueValues(rows, "adSet"), [rows]);
+  const creatives = useMemo(() => uniqueValues(rows, "creative"), [rows]);
   const productLines = useMemo(() => uniqueValues(rows, "productLine"), [rows]);
 
   return (
@@ -187,6 +192,19 @@ export function SheetsDashboard() {
                 </select>
               </div>
             )}
+            {creatives.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">소재</label>
+                <select value={creative} onChange={(e) => setCreative(e.target.value)} className={selectClass}>
+                  <option value="">전체</option>
+                  {creatives.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {productLines.length > 1 && (
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-500">상품군</label>
@@ -200,13 +218,14 @@ export function SheetsDashboard() {
                 </select>
               </div>
             )}
-            {(dateTouched || channel || campaign || adSet || productLine) && (
+            {(dateTouched || channel || campaign || adSet || creative || productLine) && (
               <button
                 onClick={() => {
                   setDateTouched(false);
                   setChannel("");
                   setCampaign("");
                   setAdSet("");
+                  setCreative("");
                   setProductLine("");
                 }}
                 className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -251,6 +270,38 @@ export function SheetsDashboard() {
               />
             </div>
           </div>
+
+          {byCreative.length > 0 && (
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <h2 className="mb-2 text-sm font-semibold">소재별 성과 (광고비 높은 순)</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-200 text-left text-xs text-zinc-500 dark:border-zinc-800">
+                      <th className="py-2 pr-4 font-medium">소재</th>
+                      <th className="py-2 pr-4 font-medium">광고비</th>
+                      <th className="py-2 pr-4 font-medium">매출</th>
+                      <th className="py-2 pr-4 font-medium">ROAS</th>
+                      <th className="py-2 pr-4 font-medium">클릭</th>
+                      <th className="py-2 pr-4 font-medium">구매</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {byCreative.map((c) => (
+                      <tr key={c.creative} className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/60">
+                        <td className="py-2 pr-4">{c.creative}</td>
+                        <td className="py-2 pr-4 tabular-nums">{fmtInt(c.cost)}원</td>
+                        <td className="py-2 pr-4 tabular-nums">{fmtInt(c.revenue)}원</td>
+                        <td className="py-2 pr-4 tabular-nums">{c.roas !== null ? fmtPct(c.roas) : "–"}</td>
+                        <td className="py-2 pr-4 tabular-nums">{fmtInt(c.clicks)}</td>
+                        <td className="py-2 pr-4 tabular-nums">{fmtInt(c.purchases)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
