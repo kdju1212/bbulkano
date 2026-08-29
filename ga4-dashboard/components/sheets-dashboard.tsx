@@ -36,13 +36,14 @@ function sortCreatives(rows: CreativeMetric[], key: CreativeSortKey, dir: "asc" 
 const selectClass =
   "rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
-// 모든 숫자를 "1,000.00" 형태(천단위 쉼표 + 소수점 2자리 고정)로 통일한다.
+// 금액·개수(광고비/매출/CPC/CPA/클릭/구매)는 천단위 쉼표만, 소수점 없이 정수로 표시한다.
 function fmtInt(n: number): string {
-  return n.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Math.round(n).toLocaleString("ko-KR");
 }
 
+// %가 붙는 비율(ROAS/CTR/CVR)만 천단위 쉼표 + 소수점 2자리로 표시한다.
 function fmtPct(n: number): string {
-  return `${fmtInt(n)}%`;
+  return `${n.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 }
 
 export function SheetsDashboard() {
