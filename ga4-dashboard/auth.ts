@@ -1,11 +1,14 @@
 // Google OAuth 설정 (Auth.js v5)
-// - analytics.readonly 스코프로 GA4 조회 권한을 함께 요청한다.
+// - analytics.readonly + spreadsheets.readonly 스코프로 GA4·구글시트 조회 권한을 함께 요청한다.
 // - access_type=offline + prompt=consent 로 refresh_token을 받아 만료 시 자동 갱신한다.
+// - 시트 접근은 별도 서버 저장 토큰 없이 "로그인한 사람 본인의" 세션 토큰으로만 호출한다 —
+//   그 계정이 시트에 권한이 없으면 구글 API가 자체적으로 막아준다 (다른 사람이 로그인해도 안전).
 
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-const GA_SCOPE = "openid email profile https://www.googleapis.com/auth/analytics.readonly";
+const GA_SCOPE =
+  "openid email profile https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/spreadsheets.readonly";
 
 type TokenBundle = {
   accessToken?: string;
