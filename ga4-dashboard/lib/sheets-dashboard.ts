@@ -7,6 +7,7 @@ export type SheetRow = {
   channel: string; // "매체" 열이 없으면 "타겟"(구매유사/관심사/논타겟 등) 열을 대신 쓴다.
   campaign: string;
   adSet: string; // 캠페인 하위 "세트" 열 (없으면 빈 문자열)
+  productLine: string; // 캠페인명에 "깔라만시" 포함 여부로 구분 (없으면 "미트소재")
   cost: number;
   clicks: number;
   purchases: number;
@@ -14,13 +15,19 @@ export type SheetRow = {
   impressions: number | null; // 노출수 열이 있으면 채워짐 (CTR 계산용, 없으면 null)
 };
 
+// 캠페인명 규칙(예: "(HM)국대한우_깔라만시_이미지_2607")에 맞춘 상품군 구분 — 시트 탭 이름(리포트_깔라만시/
+// 리포트_미트소사)과 같은 기준이다. 다른 상품군이 늘어나면 이 함수만 고치면 된다.
+export function deriveProductLine(campaign: string): string {
+  return campaign.includes("깔라만시") ? "깔라만시" : "미트소재";
+}
+
 export type SheetsFetchResult =
   | { status: "ok"; rows: SheetRow[] }
   | { status: "no_access"; message: string } // 이 계정은 시트 접근 권한이 없음 (구글이 막음)
   | { status: "not_configured"; message: string } // SHEETS_SPREADSHEET_ID 등 환경변수 미설정
   | { status: "error"; message: string };
 
-const HEADER_ALIASES: Record<keyof Omit<SheetRow, "date" | "impressions"> | "date" | "impressions", string[]> = {
+const HEADER_ALIASES: Record<keyof Omit<SheetRow, "productLine">, string[]> = {
   date: ["날짜", "date", "일자"],
   // "매체" 열이 있으면 그걸, 없으면 "타겟"(구매유사/관심사/논타겟 등 오디언스 구분) 열을 대신 쓴다.
   channel: ["매체", "채널", "channel", "medium", "source", "타겟", "target"],
@@ -86,11 +93,13 @@ export function parseSheetValues(values: string[][]): SheetRow[] {
     if (line.every((c) => !c || !c.trim())) continue; // 빈 줄 건너뜀
     const rawDate = col.date >= 0 ? (line[col.date] ?? "") : "";
     if (!rawDate.trim()) continue;
+    const campaign = col.campaign >= 0 ? (line[col.campaign] ?? "").trim() : "";
     rows.push({
       date: normalizeDate(rawDate),
       channel: col.channel >= 0 ? (line[col.channel] ?? "").trim() : "",
-      campaign: col.campaign >= 0 ? (line[col.campaign] ?? "").trim() : "",
+      campaign,
       adSet: col.adSet >= 0 ? (line[col.adSet] ?? "").trim() : "",
+      productLine: deriveProductLine(campaign),
       cost: parseNumber(col.cost >= 0 ? line[col.cost] : undefined),
       clicks: parseNumber(col.clicks >= 0 ? line[col.clicks] : undefined),
       purchases: parseNumber(col.purchases >= 0 ? line[col.purchases] : undefined),
@@ -136,6 +145,7 @@ export type DashboardFilters = {
   channels?: string[];
   campaigns?: string[];
   adSets?: string[];
+  productLines?: string[];
 };
 
 export function applyFilters(rows: SheetRow[], filters: DashboardFilters): SheetRow[] {
@@ -145,8 +155,21 @@ export function applyFilters(rows: SheetRow[], filters: DashboardFilters): Sheet
     if (filters.channels?.length && !filters.channels.includes(r.channel)) return false;
     if (filters.campaigns?.length && !filters.campaigns.includes(r.campaign)) return false;
     if (filters.adSets?.length && !filters.adSets.includes(r.adSet)) return false;
+    if (filters.productLines?.length && !filters.productLines.includes(r.productLine)) return false;
     return true;
   });
+}
+
+// 시트에 실제로 데이터가 있는 날짜 범위 — 날짜 필터의 기본값·선택 가능 범위로 쓴다.
+export function dateRange(rows: SheetRow[]): { min: string; max: string } | null {
+  if (rows.length === 0) return null;
+  let min = rows[0].date;
+  let max = rows[0].date;
+  for (const r of rows) {
+    if (r.date < min) min = r.date;
+    if (r.date > max) max = r.date;
+  }
+  return { min, max };
 }
 
 export type DashboardSummary = {
@@ -215,6 +238,6 @@ export function groupByChannel(rows: SheetRow[]): ChannelMetric[] {
     .map(([channel, v]) => ({ channel, cost: v.cost, revenue: v.revenue }));
 }
 
-export function uniqueValues(rows: SheetRow[], key: "channel" | "campaign" | "adSet"): string[] {
+export function uniqueValues(rows: SheetRow[], key: "channel" | "campaign" | "adSet" | "productLine"): string[] {
   return [...new Set(rows.map((r) => r[key]).filter(Boolean))].sort();
 }

@@ -8,6 +8,7 @@ import { KpiCard } from "@/components/kpi-card";
 import { TrendChart, ChannelBarChart } from "@/components/charts";
 import {
   applyFilters,
+  dateRange,
   groupByChannel,
   groupByDate,
   summarize,
@@ -36,6 +37,8 @@ export function SheetsDashboard() {
   const [channel, setChannel] = useState("");
   const [campaign, setCampaign] = useState("");
   const [adSet, setAdSet] = useState("");
+  const [productLine, setProductLine] = useState("");
+  const [dateTouched, setDateTouched] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -60,6 +63,17 @@ export function SheetsDashboard() {
     load();
   }, []);
 
+  const bounds = useMemo(() => dateRange(rows), [rows]);
+
+  // 시트 데이터가 (재)조회되면 날짜 필터를 실제 데이터의 시작~끝으로 맞춘다. 사용자가 직접 날짜를
+  // 고른 뒤에는(dateTouched) 새로고침해도 그 선택을 덮어쓰지 않는다.
+  useEffect(() => {
+    if (bounds && !dateTouched) {
+      setStartDate(bounds.min);
+      setEndDate(bounds.max);
+    }
+  }, [bounds, dateTouched]);
+
   const filtered = useMemo(
     () =>
       applyFilters(rows, {
@@ -68,8 +82,9 @@ export function SheetsDashboard() {
         channels: channel ? [channel] : undefined,
         campaigns: campaign ? [campaign] : undefined,
         adSets: adSet ? [adSet] : undefined,
+        productLines: productLine ? [productLine] : undefined,
       }),
-    [rows, startDate, endDate, channel, campaign, adSet],
+    [rows, startDate, endDate, channel, campaign, adSet, productLine],
   );
 
   const summary = useMemo(() => summarize(filtered), [filtered]);
@@ -78,6 +93,7 @@ export function SheetsDashboard() {
   const channels = useMemo(() => uniqueValues(rows, "channel"), [rows]);
   const campaigns = useMemo(() => uniqueValues(rows, "campaign"), [rows]);
   const adSets = useMemo(() => uniqueValues(rows, "adSet"), [rows]);
+  const productLines = useMemo(() => uniqueValues(rows, "productLine"), [rows]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,7 +129,12 @@ export function SheetsDashboard() {
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                min={bounds?.min}
+                max={bounds?.max}
+                onChange={(e) => {
+                  setDateTouched(true);
+                  setStartDate(e.target.value);
+                }}
                 className={selectClass}
               />
             </div>
@@ -122,7 +143,12 @@ export function SheetsDashboard() {
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                min={bounds?.min}
+                max={bounds?.max}
+                onChange={(e) => {
+                  setDateTouched(true);
+                  setEndDate(e.target.value);
+                }}
                 className={selectClass}
               />
             </div>
@@ -161,14 +187,27 @@ export function SheetsDashboard() {
                 </select>
               </div>
             )}
-            {(startDate || endDate || channel || campaign || adSet) && (
+            {productLines.length > 1 && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">상품군</label>
+                <select value={productLine} onChange={(e) => setProductLine(e.target.value)} className={selectClass}>
+                  <option value="">전체</option>
+                  {productLines.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {(dateTouched || channel || campaign || adSet || productLine) && (
               <button
                 onClick={() => {
-                  setStartDate("");
-                  setEndDate("");
+                  setDateTouched(false);
                   setChannel("");
                   setCampaign("");
                   setAdSet("");
+                  setProductLine("");
                 }}
                 className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
               >
