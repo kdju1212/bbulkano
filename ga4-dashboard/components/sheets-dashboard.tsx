@@ -14,8 +14,24 @@ import {
   groupByDate,
   summarize,
   uniqueValues,
+  type CreativeMetric,
   type SheetRow,
 } from "@/lib/sheets-dashboard";
+
+type CreativeSortKey = "cost" | "revenue" | "roas" | "clicks" | "purchases";
+
+function sortCreatives(rows: CreativeMetric[], key: CreativeSortKey, dir: "asc" | "desc"): CreativeMetric[] {
+  const withValue = rows.map((r) => r[key]);
+  // null(ROAS 계산 불가 등)은 정렬 방향과 상관없이 항상 맨 뒤로 보낸다.
+  const numeric = rows.filter((_, i) => withValue[i] !== null);
+  const nulls = rows.filter((_, i) => withValue[i] === null);
+  numeric.sort((a, b) => {
+    const av = a[key] as number;
+    const bv = b[key] as number;
+    return dir === "asc" ? av - bv : bv - av;
+  });
+  return [...numeric, ...nulls];
+}
 
 const selectClass =
   "rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900";
@@ -41,6 +57,17 @@ export function SheetsDashboard() {
   const [creative, setCreative] = useState("");
   const [productLine, setProductLine] = useState("");
   const [dateTouched, setDateTouched] = useState(false);
+  const [creativeSortKey, setCreativeSortKey] = useState<CreativeSortKey>("cost");
+  const [creativeSortDir, setCreativeSortDir] = useState<"asc" | "desc">("desc");
+
+  function toggleCreativeSort(key: CreativeSortKey) {
+    if (key === creativeSortKey) {
+      setCreativeSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setCreativeSortKey(key);
+      setCreativeSortDir("desc");
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -94,6 +121,10 @@ export function SheetsDashboard() {
   const daily = useMemo(() => groupByDate(filtered), [filtered]);
   const byChannel = useMemo(() => groupByChannel(filtered), [filtered]);
   const byCreative = useMemo(() => groupByCreative(filtered), [filtered]);
+  const sortedCreatives = useMemo(
+    () => sortCreatives(byCreative, creativeSortKey, creativeSortDir),
+    [byCreative, creativeSortKey, creativeSortDir],
+  );
   const channels = useMemo(() => uniqueValues(rows, "channel"), [rows]);
   const campaigns = useMemo(() => uniqueValues(rows, "campaign"), [rows]);
   const adSets = useMemo(() => uniqueValues(rows, "adSet"), [rows]);
@@ -273,21 +304,39 @@ export function SheetsDashboard() {
 
           {byCreative.length > 0 && (
             <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <h2 className="mb-2 text-sm font-semibold">소재별 성과 (광고비 높은 순)</h2>
+              <h2 className="mb-2 text-sm font-semibold">소재별 성과</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-left text-xs text-zinc-500 dark:border-zinc-800">
                       <th className="py-2 pr-4 font-medium">소재</th>
-                      <th className="py-2 pr-4 font-medium">광고비</th>
-                      <th className="py-2 pr-4 font-medium">매출</th>
-                      <th className="py-2 pr-4 font-medium">ROAS</th>
-                      <th className="py-2 pr-4 font-medium">클릭</th>
-                      <th className="py-2 pr-4 font-medium">구매</th>
+                      {(
+                        [
+                          { key: "cost", label: "광고비" },
+                          { key: "revenue", label: "매출" },
+                          { key: "roas", label: "ROAS" },
+                          { key: "clicks", label: "클릭" },
+                          { key: "purchases", label: "구매" },
+                        ] as const
+                      ).map((col) => (
+                        <th key={col.key} className="py-2 pr-4 font-medium">
+                          <button
+                            onClick={() => toggleCreativeSort(col.key)}
+                            className="flex items-center gap-1 hover:text-zinc-800 dark:hover:text-zinc-200"
+                          >
+                            {col.label}
+                            {creativeSortKey === col.key && (
+                              <span className="text-blue-600 dark:text-blue-400">
+                                {creativeSortDir === "desc" ? "▼" : "▲"}
+                              </span>
+                            )}
+                          </button>
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {byCreative.map((c) => (
+                    {sortedCreatives.map((c) => (
                       <tr key={c.creative} className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/60">
                         <td className="py-2 pr-4">{c.creative}</td>
                         <td className="py-2 pr-4 tabular-nums">{fmtInt(c.cost)}원</td>
