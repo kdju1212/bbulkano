@@ -35,6 +35,7 @@ export function SheetsDashboard() {
   const [endDate, setEndDate] = useState("");
   const [channel, setChannel] = useState("");
   const [campaign, setCampaign] = useState("");
+  const [adSet, setAdSet] = useState("");
 
   async function load() {
     setLoading(true);
@@ -66,8 +67,9 @@ export function SheetsDashboard() {
         endDate: endDate || undefined,
         channels: channel ? [channel] : undefined,
         campaigns: campaign ? [campaign] : undefined,
+        adSets: adSet ? [adSet] : undefined,
       }),
-    [rows, startDate, endDate, channel, campaign],
+    [rows, startDate, endDate, channel, campaign, adSet],
   );
 
   const summary = useMemo(() => summarize(filtered), [filtered]);
@@ -75,6 +77,7 @@ export function SheetsDashboard() {
   const byChannel = useMemo(() => groupByChannel(filtered), [filtered]);
   const channels = useMemo(() => uniqueValues(rows, "channel"), [rows]);
   const campaigns = useMemo(() => uniqueValues(rows, "campaign"), [rows]);
+  const adSets = useMemo(() => uniqueValues(rows, "adSet"), [rows]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -124,7 +127,7 @@ export function SheetsDashboard() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-500">매체</label>
+              <label className="text-xs font-medium text-zinc-500">매체/타겟</label>
               <select value={channel} onChange={(e) => setChannel(e.target.value)} className={selectClass}>
                 <option value="">전체</option>
                 {channels.map((c) => (
@@ -145,13 +148,27 @@ export function SheetsDashboard() {
                 ))}
               </select>
             </div>
-            {(startDate || endDate || channel || campaign) && (
+            {adSets.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">세트</label>
+                <select value={adSet} onChange={(e) => setAdSet(e.target.value)} className={selectClass}>
+                  <option value="">전체</option>
+                  {adSets.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {(startDate || endDate || channel || campaign || adSet) && (
               <button
                 onClick={() => {
                   setStartDate("");
                   setEndDate("");
                   setChannel("");
                   setCampaign("");
+                  setAdSet("");
                 }}
                 className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
               >
@@ -185,7 +202,7 @@ export function SheetsDashboard() {
               <TrendChart data={daily} lines={[{ key: "roas", label: "ROAS", color: "#f59e0b" }]} />
             </div>
             <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-2">
-              <h2 className="mb-2 text-sm font-semibold">매체별 광고비·매출</h2>
+              <h2 className="mb-2 text-sm font-semibold">매체/타겟별 광고비·매출</h2>
               <ChannelBarChart
                 data={byChannel.map((c) => ({ name: c.channel, cost: c.cost, revenue: c.revenue }))}
                 bars={[

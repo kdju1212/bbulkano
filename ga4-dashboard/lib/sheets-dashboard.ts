@@ -4,8 +4,9 @@
 
 export type SheetRow = {
   date: string; // "YYYY-MM-DD"로 정규화. 파싱 실패 시 원본 문자열 그대로.
-  channel: string;
+  channel: string; // "매체" 열이 없으면 "타겟"(구매유사/관심사/논타겟 등) 열을 대신 쓴다.
   campaign: string;
+  adSet: string; // 캠페인 하위 "세트" 열 (없으면 빈 문자열)
   cost: number;
   clicks: number;
   purchases: number;
@@ -21,8 +22,10 @@ export type SheetsFetchResult =
 
 const HEADER_ALIASES: Record<keyof Omit<SheetRow, "date" | "impressions"> | "date" | "impressions", string[]> = {
   date: ["날짜", "date", "일자"],
-  channel: ["매체", "채널", "channel", "medium", "source"],
+  // "매체" 열이 있으면 그걸, 없으면 "타겟"(구매유사/관심사/논타겟 등 오디언스 구분) 열을 대신 쓴다.
+  channel: ["매체", "채널", "channel", "medium", "source", "타겟", "target"],
   campaign: ["캠페인", "campaign"],
+  adSet: ["세트", "광고세트", "adset", "ad set", "set"],
   cost: ["광고비", "비용", "cost", "spend", "ad cost", "광고비용"],
   clicks: ["클릭", "클릭수", "click", "clicks"],
   purchases: ["구매", "전환", "구매수", "purchase", "conversion", "conversions"],
@@ -70,6 +73,7 @@ export function parseSheetValues(values: string[][]): SheetRow[] {
     date: matchColumn(headers, HEADER_ALIASES.date),
     channel: matchColumn(headers, HEADER_ALIASES.channel),
     campaign: matchColumn(headers, HEADER_ALIASES.campaign),
+    adSet: matchColumn(headers, HEADER_ALIASES.adSet),
     cost: matchColumn(headers, HEADER_ALIASES.cost),
     clicks: matchColumn(headers, HEADER_ALIASES.clicks),
     purchases: matchColumn(headers, HEADER_ALIASES.purchases),
@@ -86,6 +90,7 @@ export function parseSheetValues(values: string[][]): SheetRow[] {
       date: normalizeDate(rawDate),
       channel: col.channel >= 0 ? (line[col.channel] ?? "").trim() : "",
       campaign: col.campaign >= 0 ? (line[col.campaign] ?? "").trim() : "",
+      adSet: col.adSet >= 0 ? (line[col.adSet] ?? "").trim() : "",
       cost: parseNumber(col.cost >= 0 ? line[col.cost] : undefined),
       clicks: parseNumber(col.clicks >= 0 ? line[col.clicks] : undefined),
       purchases: parseNumber(col.purchases >= 0 ? line[col.purchases] : undefined),
@@ -130,6 +135,7 @@ export type DashboardFilters = {
   endDate?: string;
   channels?: string[];
   campaigns?: string[];
+  adSets?: string[];
 };
 
 export function applyFilters(rows: SheetRow[], filters: DashboardFilters): SheetRow[] {
@@ -138,6 +144,7 @@ export function applyFilters(rows: SheetRow[], filters: DashboardFilters): Sheet
     if (filters.endDate && r.date > filters.endDate) return false;
     if (filters.channels?.length && !filters.channels.includes(r.channel)) return false;
     if (filters.campaigns?.length && !filters.campaigns.includes(r.campaign)) return false;
+    if (filters.adSets?.length && !filters.adSets.includes(r.adSet)) return false;
     return true;
   });
 }
@@ -192,6 +199,8 @@ export function groupByDate(rows: SheetRow[]): DailyMetric[] {
 
 export type ChannelMetric = { channel: string; cost: number; revenue: number };
 
+// "channel" 필드는 시트에 "매체" 열이 있으면 매체, 없으면 "타겟" 열 값을 담고 있다 — 그룹 이름 자체를
+// UI에서 "매체별"로 고정하지 않고 상황에 맞게 표시한다.
 export function groupByChannel(rows: SheetRow[]): ChannelMetric[] {
   const byChannel = new Map<string, { cost: number; revenue: number }>();
   for (const r of rows) {
@@ -206,6 +215,6 @@ export function groupByChannel(rows: SheetRow[]): ChannelMetric[] {
     .map(([channel, v]) => ({ channel, cost: v.cost, revenue: v.revenue }));
 }
 
-export function uniqueValues(rows: SheetRow[], key: "channel" | "campaign"): string[] {
+export function uniqueValues(rows: SheetRow[], key: "channel" | "campaign" | "adSet"): string[] {
   return [...new Set(rows.map((r) => r[key]).filter(Boolean))].sort();
 }
