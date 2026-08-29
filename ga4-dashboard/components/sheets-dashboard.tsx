@@ -36,12 +36,13 @@ function sortCreatives(rows: CreativeMetric[], key: CreativeSortKey, dir: "asc" 
 const selectClass =
   "rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
+// 모든 숫자를 "1,000.00" 형태(천단위 쉼표 + 소수점 2자리 고정)로 통일한다.
 function fmtInt(n: number): string {
-  return Math.round(n).toLocaleString("ko-KR");
+  return n.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function fmtPct(n: number): string {
-  return `${n.toFixed(1)}%`;
+  return `${fmtInt(n)}%`;
 }
 
 export function SheetsDashboard() {
