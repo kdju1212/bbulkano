@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+const GROQ_MODEL = process.env.GROQ_MODEL ?? "openai/gpt-oss-120b";
 const MAX_HISTORY = 20;
 
 const CHAT_SYSTEM_PROMPT = `당신은 광고대행사의 시니어 퍼포먼스 마케터이자 데이터 분석가입니다.
