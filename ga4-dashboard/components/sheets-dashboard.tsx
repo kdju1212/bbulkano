@@ -3,7 +3,7 @@
 // 구글시트 광고 대시보드 — 비공개 구글 시트(날짜/매체/캠페인/광고비/클릭/구매/매출)를 읽기 전용으로 조회한다.
 // 로그인한 사람 본인의 구글 계정 권한으로만 시트를 읽는다 (저장/캐시 없음, 매번 최신값).
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { KpiCard } from "@/components/kpi-card";
 import { TrendChart, ChannelBarChart } from "@/components/charts";
 import {
@@ -19,6 +19,14 @@ import {
 } from "@/lib/sheets-dashboard";
 
 type CreativeSortKey = "cost" | "revenue" | "roas" | "clicks" | "purchases";
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+const CHAT_QUICK_STARTS = [
+  "지금 필터 기준으로 성과 요약해줘",
+  "어떤 소재가 제일 효율 좋아?",
+  "광고비 어디에 더 써야할까?",
+  "ROAS가 낮은 이유가 있을까?",
+];
 
 function sortCreatives(rows: CreativeMetric[], key: CreativeSortKey, dir: "asc" | "desc"): CreativeMetric[] {
   const withValue = rows.map((r) => r[key]);
@@ -132,6 +140,71 @@ export function SheetsDashboard() {
   const adSets = useMemo(() => uniqueValues(rows, "adSet"), [rows]);
   const creatives = useMemo(() => uniqueValues(rows, "creative"), [rows]);
   const productLines = useMemo(() => uniqueValues(rows, "productLine"), [rows]);
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatRetryPayload, setChatRetryPayload] = useState<ChatMessage[] | null>(null);
+  const [chatRetryCountdown, setChatRetryCountdown] = useState(0);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [chatMessages, chatSending]);
+
+  useEffect(() => {
+    if (chatRetryCountdown <= 0) return;
+    const timer = setTimeout(() => setChatRetryCountdown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [chatRetryCountdown]);
+
+  const callChatApi = async (nextMessages: ChatMessage[]) => {
+    setChatError(null);
+    setChatRetryPayload(null);
+    setChatSending(true);
+    try {
+      const res = await fetch("/api/sheets-ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: nextMessages,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          channel: channel || undefined,
+          campaign: campaign || undefined,
+          adSet: adSet || undefined,
+          creative: creative || undefined,
+          productLine: productLine || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setChatRetryPayload(nextMessages);
+        setChatRetryCountdown(data.rateLimited ? Math.max(1, Number(data.retryAfterSeconds) || 20) : 0);
+        throw new Error(data.error ?? `요청 실패 (${res.status})`);
+      }
+      setChatMessages((prev) => [...prev, { role: "assistant", content: data.reply as string }]);
+    } catch (e) {
+      setChatError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setChatSending(false);
+    }
+  };
+
+  const sendChat = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || chatSending) return;
+    const nextMessages: ChatMessage[] = [...chatMessages, { role: "user", content: trimmed }];
+    setChatMessages(nextMessages);
+    setChatInput("");
+    callChatApi(nextMessages);
+  };
+
+  const retryChat = () => {
+    if (!chatRetryPayload || chatSending || chatRetryCountdown > 0) return;
+    callChatApi(chatRetryPayload);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -353,6 +426,103 @@ export function SheetsDashboard() {
               </div>
             </div>
           )}
+
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-semibold">AI 분석</h2>
+              {chatMessages.length > 0 && (
+                <button
+                  onClick={() => setChatMessages([])}
+                  className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                >
+                  대화 초기화
+                </button>
+              )}
+            </div>
+
+            <div
+              ref={chatScrollRef}
+              className="mb-3 max-h-96 space-y-3 overflow-y-auto rounded-lg border border-zinc-100 p-3 dark:border-zinc-800"
+            >
+              {chatMessages.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+                  <p className="max-w-sm text-sm text-zinc-400">
+                    현재 필터가 적용된 시트 데이터에 대해 자유롭게 질문하세요.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {CHAT_QUICK_STARTS.map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => sendChat(q)}
+                        className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chatMessages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                      m.role === "user"
+                        ? "bg-blue-600 text-white"
+                        : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+
+              {chatSending && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl bg-zinc-100 px-4 py-2.5 text-sm text-zinc-500 dark:bg-zinc-800">
+                    분석 중...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {chatError && (
+              <div className="mb-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+                <p>{chatError}</p>
+                {chatRetryPayload && (
+                  <button
+                    onClick={retryChat}
+                    disabled={chatSending || chatRetryCountdown > 0}
+                    className="mt-2 rounded-md border border-red-300 px-3 py-1 text-xs font-medium hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700 dark:hover:bg-red-900"
+                  >
+                    {chatRetryCountdown > 0 ? `${chatRetryCountdown}초 후 다시 시도 가능` : "다시 시도"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendChat(chatInput);
+              }}
+              className="flex gap-2"
+            >
+              <input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="예: 이번 주 성과 요약해줘"
+                className="flex-1 rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              />
+              <button
+                type="submit"
+                disabled={chatSending || !chatInput.trim()}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              >
+                전송
+              </button>
+            </form>
+          </div>
         </>
       )}
     </div>
