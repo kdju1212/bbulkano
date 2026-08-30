@@ -10,6 +10,7 @@ import {
   groupByCreative,
   groupByDate,
   groupByProductLine,
+  groupByProductLineAndChannel,
   summarize,
 } from "@/lib/sheets-dashboard";
 import { buildSheetsContextText } from "@/lib/sheets-ai-context";
@@ -88,8 +89,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     const byChannel = groupByChannel(filtered);
     const byCreative = groupByCreative(filtered);
     const byProductLine = groupByProductLine(filtered);
+    const byProductLineAndChannel = groupByProductLineAndChannel(filtered);
 
-    const contextText = buildSheetsContextText(filters, summary, daily, byChannel, byCreative, byProductLine);
+    const contextText = buildSheetsContextText(
+      filters,
+      summary,
+      daily,
+      byChannel,
+      byCreative,
+      byProductLine,
+      byProductLineAndChannel,
+    );
     const history = body.messages.slice(-MAX_HISTORY);
 
     const groqRes = await fetch(GROQ_URL, {

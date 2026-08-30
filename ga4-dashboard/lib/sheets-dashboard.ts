@@ -278,6 +278,44 @@ export function groupByProductLine(rows: SheetRow[]): ProductLineMetric[] {
     }));
 }
 
+export type ProductLineChannelMetric = {
+  productLine: string;
+  channel: string;
+  cost: number;
+  revenue: number;
+  clicks: number;
+  purchases: number;
+  roas: number | null;
+};
+
+// 상품군(깔라만시/미트소재) × 매체/타겟 교차 집계 — "상품군마다 어떤 타겟이 좋아?" 같은,
+// 상품군별 그룹과 매체/타겟별 그룹을 합쳐서 봐야 답할 수 있는 질문의 근거로 쓴다.
+export function groupByProductLineAndChannel(rows: SheetRow[]): ProductLineChannelMetric[] {
+  const byKey = new Map<string, { productLine: string; channel: string; cost: number; revenue: number; clicks: number; purchases: number }>();
+  for (const r of rows) {
+    const productLine = r.productLine || "(미지정)";
+    const channel = r.channel || "(미지정)";
+    const key = `${productLine} ${channel}`;
+    const cur = byKey.get(key) ?? { productLine, channel, cost: 0, revenue: 0, clicks: 0, purchases: 0 };
+    cur.cost += r.cost;
+    cur.revenue += r.revenue;
+    cur.clicks += r.clicks;
+    cur.purchases += r.purchases;
+    byKey.set(key, cur);
+  }
+  return [...byKey.values()]
+    .sort((a, b) => a.productLine.localeCompare(b.productLine) || b.cost - a.cost)
+    .map((v) => ({
+      productLine: v.productLine,
+      channel: v.channel,
+      cost: v.cost,
+      revenue: v.revenue,
+      clicks: v.clicks,
+      purchases: v.purchases,
+      roas: v.cost > 0 ? (v.revenue / v.cost) * 100 : null,
+    }));
+}
+
 export function uniqueValues(
   rows: SheetRow[],
   key: "channel" | "campaign" | "adSet" | "creative" | "productLine",

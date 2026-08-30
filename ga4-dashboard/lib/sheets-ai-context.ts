@@ -6,6 +6,7 @@ import type {
   DailyMetric,
   DashboardFilters,
   DashboardSummary,
+  ProductLineChannelMetric,
   ProductLineMetric,
 } from "@/lib/sheets-dashboard";
 
@@ -16,6 +17,7 @@ export function buildSheetsContextText(
   byChannel: ChannelMetric[],
   byCreative: CreativeMetric[],
   byProductLine: ProductLineMetric[],
+  byProductLineAndChannel: ProductLineChannelMetric[],
 ): string {
   return [
     `분석 대상: 구글시트 광고 성과 데이터`,
@@ -32,6 +34,9 @@ export function buildSheetsContextText(
     "",
     "## 상품군별 광고비·매출·클릭·구매·ROAS",
     JSON.stringify(byProductLine),
+    "",
+    "## 상품군 × 매체/타겟별 광고비·매출·클릭·구매·ROAS (상품군마다 어떤 매체/타겟이 좋은지 비교할 때 이 표를 쓰세요)",
+    JSON.stringify(byProductLineAndChannel),
     "",
     "## 소재별 성과 (광고비 상위 30)",
     JSON.stringify(byCreative.slice(0, 30)),
