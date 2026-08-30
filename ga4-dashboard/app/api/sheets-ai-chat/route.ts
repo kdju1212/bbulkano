@@ -3,7 +3,15 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { applyFilters, fetchSheetRows, groupByChannel, groupByCreative, groupByDate, summarize } from "@/lib/sheets-dashboard";
+import {
+  applyFilters,
+  fetchSheetRows,
+  groupByChannel,
+  groupByCreative,
+  groupByDate,
+  groupByProductLine,
+  summarize,
+} from "@/lib/sheets-dashboard";
 import { buildSheetsContextText } from "@/lib/sheets-ai-context";
 
 export const runtime = "nodejs";
@@ -79,8 +87,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     const daily = groupByDate(filtered);
     const byChannel = groupByChannel(filtered);
     const byCreative = groupByCreative(filtered);
+    const byProductLine = groupByProductLine(filtered);
 
-    const contextText = buildSheetsContextText(filters, summary, daily, byChannel, byCreative);
+    const contextText = buildSheetsContextText(filters, summary, daily, byChannel, byCreative, byProductLine);
     const history = body.messages.slice(-MAX_HISTORY);
 
     const groqRes = await fetch(GROQ_URL, {

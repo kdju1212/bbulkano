@@ -244,6 +244,40 @@ export function groupByChannel(rows: SheetRow[]): ChannelMetric[] {
     .map(([channel, v]) => ({ channel, cost: v.cost, revenue: v.revenue }));
 }
 
+export type ProductLineMetric = {
+  productLine: string;
+  cost: number;
+  revenue: number;
+  clicks: number;
+  purchases: number;
+  roas: number | null;
+};
+
+// 상품군(깔라만시/미트소재)별 비교용 집계 — AI 챗봇이 "상품군으로 나눠서 비교해줘" 같은 질문에
+// 답할 근거로 쓴다.
+export function groupByProductLine(rows: SheetRow[]): ProductLineMetric[] {
+  const byProductLine = new Map<string, { cost: number; revenue: number; clicks: number; purchases: number }>();
+  for (const r of rows) {
+    const key = r.productLine || "(미지정)";
+    const cur = byProductLine.get(key) ?? { cost: 0, revenue: 0, clicks: 0, purchases: 0 };
+    cur.cost += r.cost;
+    cur.revenue += r.revenue;
+    cur.clicks += r.clicks;
+    cur.purchases += r.purchases;
+    byProductLine.set(key, cur);
+  }
+  return [...byProductLine.entries()]
+    .sort(([, a], [, b]) => b.cost - a.cost)
+    .map(([productLine, v]) => ({
+      productLine,
+      cost: v.cost,
+      revenue: v.revenue,
+      clicks: v.clicks,
+      purchases: v.purchases,
+      roas: v.cost > 0 ? (v.revenue / v.cost) * 100 : null,
+    }));
+}
+
 export function uniqueValues(
   rows: SheetRow[],
   key: "channel" | "campaign" | "adSet" | "creative" | "productLine",
