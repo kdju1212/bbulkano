@@ -209,14 +209,10 @@ export function SheetsDashboard() {
     callChatApi(chatRetryPayload);
   };
 
-  // 데일리 코멘트 작성은 보통 전혀 다른 날의 새 요청이라, 이전 대화(히스토리)가 남아있으면
-  // 그걸 참고할지 무시하고 새로 쓸지 먼저 물어본다. 히스토리가 없으면 바로 작성한다.
+  // 평소엔 대화 없이 "데일리 코멘트 작성"만 반복해서 누르는 경우가 많아서, 매번 히스토리가
+  // 있는지(=이전 대화를 참고할지) 먼저 물어보고 사용자가 직접 답하게 한다.
   const handleDailyCommentClick = () => {
-    if (chatMessages.length === 0) {
-      sendChat(DAILY_COMMENT_PROMPT);
-    } else {
-      setDailyCommentConfirmOpen(true);
-    }
+    setDailyCommentConfirmOpen(true);
   };
 
   const confirmDailyComment = (useHistory: boolean) => {
@@ -515,19 +511,19 @@ export function SheetsDashboard() {
 
             {dailyCommentConfirmOpen && (
               <div className="mb-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">
-                <p className="mb-2">지금까지 나눈 대화가 있습니다. 참고해서 작성할까요?</p>
+                <p className="mb-2">참고할 히스토리(이전 대화)가 있나요?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => confirmDailyComment(true)}
                     className="rounded-md border border-blue-300 px-3 py-1 text-xs font-medium hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900"
                   >
-                    참고해서 작성
+                    네, 있어요
                   </button>
                   <button
                     onClick={() => confirmDailyComment(false)}
                     className="rounded-md border border-blue-300 px-3 py-1 text-xs font-medium hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900"
                   >
-                    무시하고 새로 작성
+                    아니요, 없어요
                   </button>
                 </div>
               </div>
