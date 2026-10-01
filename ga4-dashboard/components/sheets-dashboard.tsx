@@ -22,6 +22,7 @@ type CreativeSortKey = "cost" | "revenue" | "roas" | "clicks" | "purchases";
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const CHAT_QUICK_STARTS = [
+  "오늘 캠페인별 데일리 코멘트 작성해줘",
   "지금 필터 기준으로 성과 요약해줘",
   "어떤 소재가 제일 효율 좋아?",
   "광고비 어디에 더 써야할까?",
