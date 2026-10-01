@@ -21,8 +21,9 @@ import {
 type CreativeSortKey = "cost" | "revenue" | "roas" | "clicks" | "purchases";
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
+const DAILY_COMMENT_PROMPT = "오늘 캠페인별 데일리 코멘트 작성해줘";
+
 const CHAT_QUICK_STARTS = [
-  "오늘 캠페인별 데일리 코멘트 작성해줘",
   "지금 필터 기준으로 성과 요약해줘",
   "어떤 소재가 제일 효율 좋아?",
   "광고비 어디에 더 써야할까?",
@@ -148,6 +149,7 @@ export function SheetsDashboard() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [chatRetryPayload, setChatRetryPayload] = useState<ChatMessage[] | null>(null);
   const [chatRetryCountdown, setChatRetryCountdown] = useState(0);
+  const [dailyCommentConfirmOpen, setDailyCommentConfirmOpen] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -193,10 +195,10 @@ export function SheetsDashboard() {
     }
   };
 
-  const sendChat = (text: string) => {
+  const sendChat = (text: string, base: ChatMessage[] = chatMessages) => {
     const trimmed = text.trim();
     if (!trimmed || chatSending) return;
-    const nextMessages: ChatMessage[] = [...chatMessages, { role: "user", content: trimmed }];
+    const nextMessages: ChatMessage[] = [...base, { role: "user", content: trimmed }];
     setChatMessages(nextMessages);
     setChatInput("");
     callChatApi(nextMessages);
@@ -205,6 +207,21 @@ export function SheetsDashboard() {
   const retryChat = () => {
     if (!chatRetryPayload || chatSending || chatRetryCountdown > 0) return;
     callChatApi(chatRetryPayload);
+  };
+
+  // 데일리 코멘트 작성은 보통 전혀 다른 날의 새 요청이라, 이전 대화(히스토리)가 남아있으면
+  // 그걸 참고할지 무시하고 새로 쓸지 먼저 물어본다. 히스토리가 없으면 바로 작성한다.
+  const handleDailyCommentClick = () => {
+    if (chatMessages.length === 0) {
+      sendChat(DAILY_COMMENT_PROMPT);
+    } else {
+      setDailyCommentConfirmOpen(true);
+    }
+  };
+
+  const confirmDailyComment = (useHistory: boolean) => {
+    setDailyCommentConfirmOpen(false);
+    sendChat(DAILY_COMMENT_PROMPT, useHistory ? chatMessages : []);
   };
 
   return (
@@ -431,14 +448,23 @@ export function SheetsDashboard() {
           <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-semibold">AI 분석</h2>
-              {chatMessages.length > 0 && (
+              <div className="flex gap-2">
                 <button
-                  onClick={() => setChatMessages([])}
-                  className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                  onClick={handleDailyCommentClick}
+                  disabled={chatSending}
+                  className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
                 >
-                  대화 초기화
+                  데일리 코멘트 작성
                 </button>
-              )}
+                {chatMessages.length > 0 && (
+                  <button
+                    onClick={() => setChatMessages([])}
+                    className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                  >
+                    대화 초기화
+                  </button>
+                )}
+              </div>
             </div>
 
             <div
@@ -486,6 +512,26 @@ export function SheetsDashboard() {
                 </div>
               )}
             </div>
+
+            {dailyCommentConfirmOpen && (
+              <div className="mb-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">
+                <p className="mb-2">지금까지 나눈 대화가 있습니다. 참고해서 작성할까요?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => confirmDailyComment(true)}
+                    className="rounded-md border border-blue-300 px-3 py-1 text-xs font-medium hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900"
+                  >
+                    참고해서 작성
+                  </button>
+                  <button
+                    onClick={() => confirmDailyComment(false)}
+                    className="rounded-md border border-blue-300 px-3 py-1 text-xs font-medium hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900"
+                  >
+                    무시하고 새로 작성
+                  </button>
+                </div>
+              </div>
+            )}
 
             {chatError && (
               <div className="mb-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
